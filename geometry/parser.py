@@ -56,7 +56,7 @@ class Parser:
         return  self.faces
 
     def __repr__(self):
-        if not object:
+        if not self.object:
             return "Parser is empty"
         return "File " + self.path + " parsed. Object read: \n" + self.object.__repr__()
 
