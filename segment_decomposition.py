@@ -106,6 +106,7 @@ def find_support(edge_map, point_orientation, initial_point):
 
 def linearize(edge_map, orientation_map, quantization_channels):
     orientation_map = quantized(orientation_map, quantization_channels)
+    # TODO
     pass
 
 
