@@ -5,13 +5,15 @@ import math
 
 
 def get_edge_map(img):
-    return cv2.Canny(img, 100, 200) # need to choose thresholds properly
+    return cv2.Canny(img, 100, 200)  # Need to choose thresholds properly
 
 
 def get_orientation_map(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    xder = cv2.Sobel(gray_img, cv2.CV_32F, 1, 0) # need to pay attention to the arguments
-    yder = cv2.Sobel(gray_img, cv2.CV_32F, 0, 1) # need to pay attention to the arguments
+    
+    # Need to pay attention to the arguments
+    xder = cv2.Sobel(gray_img, cv2.CV_32F, 1, 0)
+    yder = cv2.Sobel(gray_img, cv2.CV_32F, 0, 1)
     
     orientation_map = cv2.phase(xder, yder)
     for i, row in enumerate(orientation_map):
@@ -27,7 +29,9 @@ def quantized(orientation_map, quantization_channels):
     
     for i, row in enumerate(orientation_map):
         for j, angle in enumerate(row):
-            units_number = int(round(angle / math.pi * quantization_channels)) % quantization_channels
+            units_number = int(round(angle / math.pi * quantization_channels))
+            units_number %= quantization_channels
+            
             quantized_map[i][j] = unit_angle * units_number
     
     return quantized_map
@@ -42,15 +46,20 @@ class PointSupport:
     
     
     def angle_deviation(self, point):
-        return abs(self.orientation - math.atan2(numpy.cross(self.point, point), numpy.dot(self.point, point) + math.pi) % math.pi)
+        cross_product = numpy.cross(self.point, point)
+        dot_product = numpy.dot(self.point, point)
+        point_orientation = math.atan2(cross_product, dot_product) + math.pi
+        point_orientation %= math.pi
+        return abs(self.orientation - point_orientation)
     
     
     def residual(self, point):
-        return numpy.linalg.norm(self.point - point) * math.sin(self.angle_deviation(point))
+        distance = numpy.linalg.norm(self.point - point)
+        return distance * math.sin(self.angle_deviation(point))
         
     
     def add_point(self, point):
-        if self.residual(point) > 5: # need to choose thresholds properly
+        if self.residual(point) > 10:  # Need to choose thresholds properly
             return
         
         self.support += 1
@@ -59,8 +68,10 @@ class PointSupport:
 
 
 def find_support(edge_map, point_orientation, initial_point):
-    directions = [numpy.array([0, 1]), numpy.array([1, 0]), numpy.array([0, -1]), numpy.array([-1, 0]),
-    numpy.array([1, 1]), numpy.array([1, -1]), numpy.array([-1, -1]), numpy.array([-1, 1])]
+    directions = [numpy.array([0, 1]), numpy.array([1, 0]),
+                  numpy.array([0, -1]), numpy.array([-1, 0]),
+                  numpy.array([1, 1]), numpy.array([1, -1]),
+                  numpy.array([-1, -1]), numpy.array([-1, 1])]
     
     used_point = numpy.ndarray(edge_map.shape, bool)
     used_point.fill(False)
@@ -79,11 +90,10 @@ def find_support(edge_map, point_orientation, initial_point):
         for d in directions:
             next_point = point + d
             
-            # looks ugly
-            if 0 > next_point[0] or next_point[0] >= len(edge_map) or 0 > next_point[1] or next_point[1] >= len(edge_map[0]):
-                continue
-                
-            if edge_map[next_point[0]][next_point[1]] == 0 or used_point[next_point[0]][next_point[1]]:
+            if (edge_map[next_point[0]][next_point[1]] == 0 or
+                used_point[next_point[0]][next_point[1]] or
+                not (0 <= next_point[0] < len(edge_map) and
+                     0 <= next_point[1] < len(edge_map[0]))):
                 continue
             
             queue.append(next_point)
