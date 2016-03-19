@@ -11,16 +11,21 @@ def get_orientation_map(img):
     xder = cv2.Sobel(gray_img, cv2.CV_32F, 1, 0) # need to pay attention to the arguments
     yder = cv2.Sobel(gray_img, cv2.CV_32F, 0, 1) # need to pay attention to the arguments
     
-    return cv2.phase(xder, yder, angleInDegrees = True)
+    orientation_map = cv2.phase(xder, yder, angleInDegrees = True)
+    for i, row in enumerate(orientation_map):
+        for j, angle in enumerate(row):
+            orientation_map[i][j] %= 180.0
+    
+    return orientation_map
 
 
 def quantized(orientation_map, quantization_channels):
     quantized_map = numpy.ndarray(orientation_map.shape, float)
-    unit_angle = 360.0 / quantization_channels
+    unit_angle = 180.0 / quantization_channels
     
     for i, row in enumerate(orientation_map):
         for j, angle in enumerate(row):
-            units_number = int(round(angle / 360.0 * quantization_channels)) % quantization_channels
+            units_number = int(round(angle / 180.0 * quantization_channels)) % quantization_channels
             quantized_map[i][j] = unit_angle * units_number
     
     return quantized_map
