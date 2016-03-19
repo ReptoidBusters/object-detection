@@ -1,5 +1,6 @@
 import cv2
 import numpy
+import collections
 
 
 def get_edge_map(img):
@@ -42,13 +43,48 @@ class Point:
 
 
 class PointSupport:
-    def __init__(self, point):
+    def __init__(self, point, orientation):
         self.point = point
+        self.orientation = orientation
         self.support = 0
+        self.list = []
+        
+    def add_point(self, point):
+        self.support += 1
+        self.list.append(point)
+        return True
 
 
-def find_support(edge_map, orientation_map, x, y):
-    pass
+def find_support(edge_map, point_orientation, initial_point):
+    directions = [Point(0, 1), Point(1, 0), Point(0, -1), Point(-1, 0), Point(1, 1), Point(1, -1), Point(-1, -1), Point(-1, 1)]
+    used_point = numpy.ndarray(edge_map.shape, bool)
+    used_point.fill(False)
+    
+    support = PointSupport(initial_point, point_orientation)
+    
+    queue = collections.deque()
+    queue.append(initial_point)
+    used_point[initial_point.x][initial_point.y] = True
+    
+    while len(queue) > 0:
+        point = queue.popleft()
+        if not support.add_point(point):
+            continue
+            
+        for d in directions:
+            next_point = point + d
+            
+            # looks ugly
+            if 0 > next_point.x or next_point.x >= len(edge_map) or 0 > next_point.y or next_point.y >= len(edge_map[0]):
+                continue
+                
+            if edge_map[next_point.x][next_point.y] == 0 or used_point[next_point.x][next_point.y]:
+                continue
+            
+            queue.append(next_point)
+            used_point[next_point.x][next_point.y] = True
+    
+    return support
 
 
 def linearize(edge_map, orientation_map, quantization_channels):
