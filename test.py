@@ -1,7 +1,7 @@
-from parsing.parser import Parser
+from geometry.loading import load_object
 
 __author__ = 'Artyom'
 
-p = Parser()
-p.read_file("test.txt")
+
+p = load_object("test.txt")
 print(p)

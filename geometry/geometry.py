@@ -15,21 +15,13 @@ class Point:
         return "(" + ", ".join(lst) + ")"
 
 
-class Face:
+class Object3D:
 
-    def __init__(self, points):
+    def __init__(self, faces, points):
+        self.faces = faces  # list of tuples which define faces
         self.points = points
 
     def __repr__(self):
         points = [p.__repr__() for p in self.points]
-        return "Face[points: " + ", ".join(points) + "]"
-
-
-class Object3D:
-
-    def __init__(self, faces):
-        self.faces = faces
-
-    def __repr__(self):
         faces = [f.__repr__() for f in self.faces]
-        return "Object3D[faces = " + ",\n".join(faces) + "]"
+        return "Object3D[points = " + ",\n".join(points) + "]\n[faces = " + ",\n".join(faces) + "]"
