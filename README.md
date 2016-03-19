@@ -2,7 +2,7 @@
 
 Edge-based and keypoint-based object detection algorithms
 
-# Installation instructions
+## Installation instructions
 
 Using a [virtual environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) 
 is recommended. If you have Python 3.4+ and `pip` installed, you can install 
