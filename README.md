@@ -12,7 +12,8 @@ most of the project dependencies with
 
 Unfortunately installation of OpenCV for Python 3 is quite a bit trickier, but, 
 luckily, there is a nice 
-[guide](http://www.pyimagesearch.com/2015/07/20/install-opencv-3-0-and-python-3-4-on-ubuntu/) for Ubuntu (same steps for any other Linux distribution). If you are using 
+[guide](http://www.pyimagesearch.com/2015/07/20/install-opencv-3-0-and-python-3-4-on-ubuntu/) 
+for Ubuntu (same steps for any other Linux distribution). If you are using 
 Windows, you can find 
 [precompiled binaries](http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv) 
 (requires wheel). You would also need 
