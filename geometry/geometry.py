@@ -10,7 +10,9 @@ class Point:
         self.w = w
 
     def __repr__(self):
-        return "(" + str(self.x) + ", " + str(self.y) + ", " + str(self.z) + ", " + str(self.w) + ")"
+        lst = [self.x, self.y, self.z, self.w]
+        lst = [str(i) for i in lst]
+        return "(" + ", ".join(lst) + ")"
 
 
 class Face:
