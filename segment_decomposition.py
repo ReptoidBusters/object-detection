@@ -1,6 +1,7 @@
 import cv2
 import numpy
 import collections
+import math
 
 
 def get_edge_map(img):
@@ -38,8 +39,20 @@ class PointSupport:
         self.orientation = orientation
         self.support = 0
         self.list = []
-        
+    
+    
+    def angle_deviation(self, point):
+        return math.atan2(numpy.cross(self.point, point), numpy.dot(self.point, point) + math.pi) % math.pi
+    
+    
+    def residual(self, point):
+        return numpy.linalg.norm(self.point - point) * math.sin(self.angle_deviation(point))
+    
+    
     def add_point(self, point):
+        if self.residual(point) > 1: # need to choose thresholds properly
+            return
+        
         self.support += 1
         self.list.append(point)
         return True
