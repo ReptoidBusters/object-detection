@@ -18,6 +18,7 @@ def get_orientation_map(img):
     orientation_map = cv2.phase(xder, yder)
     for i, row in enumerate(orientation_map):
         for j, angle in enumerate(row):
+            orientation_map[i][j] += math.pi / 2
             orientation_map[i][j] %= math.pi
     
     return orientation_map
@@ -60,7 +61,7 @@ class PointSupport:
         return res
     
     def add_point(self, point):
-        if self.residual(point) > 10:  # Need to choose thresholds properly
+        if self.residual(point) > 0.5:  # Need to choose thresholds properly
             return
         
         self.support += 1
