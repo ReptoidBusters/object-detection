@@ -1,5 +1,3 @@
-import numpy
-import cv2
 import base
 
 n = int(input("Number of inputs: "))
@@ -15,6 +13,6 @@ for x in range(0, N + 1):
     print(int(x / N * 100), end = "%\r")
 print("Done!")
 
-for i in range(n):
+for frame in data:
     method = base.output_interface.methods[input("Output method to use: ")]
-    method(*method.readArguments()).save()
+    method(frame).save(*method.readArguments())
