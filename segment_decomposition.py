@@ -55,8 +55,9 @@ class PointSupport:
     
     def residual(self, point):
         distance = numpy.linalg.norm(self.point - point)
-        return distance * math.sin(self.angle_deviation(point))
-        
+        res = distance * math.sin(self.angle_deviation(point))
+        print(res)
+        return res
     
     def add_point(self, point):
         if self.residual(point) > 10:  # Need to choose thresholds properly
@@ -80,7 +81,7 @@ def find_support(edge_map, point_orientation, initial_point):
     
     queue = collections.deque()
     queue.append(initial_point)
-    used_point[initial_point[0]][initial_point[1]] = True
+    used_point[initial_point[1]][initial_point[0]] = True
     
     while len(queue) > 0:
         point = queue.popleft()
@@ -90,14 +91,14 @@ def find_support(edge_map, point_orientation, initial_point):
         for d in directions:
             next_point = point + d
             
-            if (edge_map[next_point[0]][next_point[1]] == 0 or
-                used_point[next_point[0]][next_point[1]] or
+            if (edge_map[next_point[1]][next_point[0]] == 0 or
+                used_point[next_point[1]][next_point[0]] or
                 not (0 <= next_point[0] < len(edge_map) and
                      0 <= next_point[1] < len(edge_map[0]))):
                 continue
             
             queue.append(next_point)
-            used_point[next_point[0]][next_point[1]] = True
+            used_point[next_point[1]][next_point[0]] = True
     
     return support
 
