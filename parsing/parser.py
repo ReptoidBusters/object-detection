@@ -18,10 +18,10 @@ class Parser:
         self.faces = []
         self.path = path
         file = open(path, "r")
-        for line in file.readlines():
-            self.parse(line)
+        with open(path) as file:
+            for line in file.readlines():
+                self.parse(line)
         self.object = Object3D(self.faces)
-        file.close()
 
     def parse(self, line):
         line = line.strip()  # remove spaces from the begin of line
