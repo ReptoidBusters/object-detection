@@ -13,3 +13,17 @@ def get_orientation_map(img):
     
     return cv2.phase(xder, yder, angleInDegrees = True)
 
+
+def quantized(orientation_map, quantization_channels):
+    quantized_map = numpy.ndarray(orientation_map.shape, int)
+    for i, row in enumerate(orientation_map):
+        for j, angle in enumerate(row):
+            quantized_map[i][j] = angle / 360.0 * quantization_channels
+    
+    return quantized_map
+
+
+def linearize(edge_map, orientation_map, quantization_channels):
+    pass
+
+
