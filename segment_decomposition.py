@@ -32,16 +32,6 @@ def quantized(orientation_map, quantization_channels):
     return quantized_map
 
 
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        
-    
-    def __add__(self, other):
-        return Point(self.x + other.x, self.y + other.y)
-
-
 class PointSupport:
     def __init__(self, point, orientation):
         self.point = point
@@ -56,7 +46,9 @@ class PointSupport:
 
 
 def find_support(edge_map, point_orientation, initial_point):
-    directions = [Point(0, 1), Point(1, 0), Point(0, -1), Point(-1, 0), Point(1, 1), Point(1, -1), Point(-1, -1), Point(-1, 1)]
+    directions = [numpy.array([0, 1]), numpy.array([1, 0]), numpy.array([0, -1]), numpy.array([-1, 0]),
+    numpy.array([1, 1]), numpy.array([1, -1]), numpy.array([-1, -1]), numpy.array([-1, 1])]
+    
     used_point = numpy.ndarray(edge_map.shape, bool)
     used_point.fill(False)
     
@@ -64,7 +56,7 @@ def find_support(edge_map, point_orientation, initial_point):
     
     queue = collections.deque()
     queue.append(initial_point)
-    used_point[initial_point.x][initial_point.y] = True
+    used_point[initial_point[0]][initial_point[1]] = True
     
     while len(queue) > 0:
         point = queue.popleft()
@@ -75,14 +67,14 @@ def find_support(edge_map, point_orientation, initial_point):
             next_point = point + d
             
             # looks ugly
-            if 0 > next_point.x or next_point.x >= len(edge_map) or 0 > next_point.y or next_point.y >= len(edge_map[0]):
+            if 0 > next_point[0] or next_point[0] >= len(edge_map) or 0 > next_point[1] or next_point[1] >= len(edge_map[0]):
                 continue
                 
-            if edge_map[next_point.x][next_point.y] == 0 or used_point[next_point.x][next_point.y]:
+            if edge_map[next_point[0]][next_point[1]] == 0 or used_point[next_point[0]][next_point[1]]:
                 continue
             
             queue.append(next_point)
-            used_point[next_point.x][next_point.y] = True
+            used_point[next_point[0]][next_point[1]] = True
     
     return support
 
