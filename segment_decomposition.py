@@ -42,15 +42,15 @@ class PointSupport:
     
     
     def angle_deviation(self, point):
-        return math.atan2(numpy.cross(self.point, point), numpy.dot(self.point, point) + math.pi) % math.pi
+        return abs(self.orientation - math.atan2(numpy.cross(self.point, point), numpy.dot(self.point, point) + math.pi) % math.pi)
     
     
     def residual(self, point):
         return numpy.linalg.norm(self.point - point) * math.sin(self.angle_deviation(point))
-    
+        
     
     def add_point(self, point):
-        if self.residual(point) > 1: # need to choose thresholds properly
+        if self.residual(point) > 5: # need to choose thresholds properly
             return
         
         self.support += 1
