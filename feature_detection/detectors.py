@@ -59,7 +59,7 @@ def siftDetector(img):
     
     for pnt in keypoints:
         clr = (255,255,255)
-        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 10, clr, 1)
+        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 5, clr, 1)
     return vis
 
 def surfDetector(img):
@@ -71,7 +71,7 @@ def surfDetector(img):
     
     for pnt in keypoints:
         clr = (255, 255, 255)
-        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 10, clr, 1)
+        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 5, clr, 1)
 
     return vis 
 
@@ -85,7 +85,7 @@ def gfttDetector(img):
     for pnt in keypoints:
         x,y = pnt.ravel()
         clr = (255,255,255)
-        cv2.circle(vis, (x, y), 10, clr, 1)
+        cv2.circle(vis, (x, y), 5, clr, 1)
 
     return vis
 
@@ -98,7 +98,7 @@ def orbDetector(img):
     
     for pnt in keypoints:
         clr = (255,255,255)
-        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 10, clr, 1)
+        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 5, clr, 1)
     return vis
        
 def mserDetector(img):
@@ -130,3 +130,40 @@ def mserDetector(img):
         clr = (np.random.randint(255), np.random.randint(255), np.random.randint(255))
         cv2.polylines(vis, np.array(regBorders[i:i+1]), 1, clr)
     return vis
+
+def fastDetector(img):
+    fast = cv2.FastFeatureDetector_create()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    vis = img.copy()
+
+    keypoints = fast.detect(gray, 1000)
+    
+    for pnt in keypoints:
+        clr = (255,255,255)
+        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 5, clr, 1)
+    return vis    
+
+def akazeDetector(img):
+    akaze = cv2.AKAZE_create()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    vis = img.copy()
+
+    keypoints = akaze.detect(gray)
+    
+    for pnt in keypoints:
+        clr = (255,255,255)
+        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 5, clr, 1)
+    return vis    
+
+def starDetector(img):
+    star = cv2.xfeatures2d.StarDetector_create()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    vis = img.copy()
+  
+    keypoints = star.detect(gray, None)
+    
+    for pnt in keypoints:
+        clr = (255, 255, 255)
+        cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 5, clr, 1)
+
+    return vis     

@@ -11,9 +11,12 @@ Feature detectors tester
 
 Usage:
 
-python3 tester.py ALL|ORB|MSER|SURF|SIFT|BLOB|GFTT input_image.jpg 
+python3 tester.py ALL|STAR|AKAZE|FAST|ORB|MSER|SURF|SIFT|BLOB|GFTT input_image.jpg 
 
 '''
+
+def kek():
+    pass
 
 if __name__ == '__main__':
     import sys
@@ -23,6 +26,9 @@ if __name__ == '__main__':
                      'SURF': detectors.surfDetector,
                      'SIFT': detectors.siftDetector,
                      'BLOB': detectors.blobDetector,
+                     'FAST': detectors.fastDetector,
+                     'AKAZE': detectors.akazeDetector,
+                     'STAR': detectors.starDetector,
                      'GFTT': detectors.gfttDetector}
 
     img = cv2.imread(sys.argv[2])
@@ -39,7 +45,7 @@ if __name__ == '__main__':
 
     if sys.argv[1] == 'ALL':
         cnt = 0
-        height = min( len(img) + 100, screenHeight//2 )
+        height = min( len(img) + 100, screenHeight//3 )
         width = min( len(img[0]) + 100, screenWidth//3 )
         print(width, height)
         for key, detector in detectorsDict.items():
@@ -55,6 +61,8 @@ if __name__ == '__main__':
     else:
         img = detectorsDict[sys.argv[1]](img)
         cv2.imshow(sys.argv[1], img)
+
+    #cv2.createButton(None, kek)
 
     while True:
         kek = cv2.waitKey()
