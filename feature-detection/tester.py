@@ -11,18 +11,16 @@ Feature detectors tester
 
 Usage:
 
-python3 tester.py ALL|STAR|AKAZE|FAST|ORB|MSER|SURF|SIFT|BLOB|GFTT input_image.jpg 
+python3 tester.py ALL|STAR|AKAZE|FAST|ORB|MSER|SURF|SIFT|BLOB|GFTT
+        input_image.jpg
 
 '''
-
-def kek():
-    pass
 
 if __name__ == '__main__':
     import sys
 
     detectorsDict = {'ORB': detectors.orbDetector,
-                     'MSER': detectors.mserDetector,  
+                     'MSER': detectors.mserDetector,
                      'SURF': detectors.surfDetector,
                      'SIFT': detectors.siftDetector,
                      'BLOB': detectors.blobDetector,
@@ -37,7 +35,7 @@ if __name__ == '__main__':
 
     resString = subprocess.check_output("xrandr | grep '*'", shell=True)
     resString = resString.decode("utf-8")
-    tmpNums = [ i for i in map(int, re.findall(r'\d+', resString)) ]
+    tmpNums = [i for i in map(int, re.findall(r'\d+', resString))]
     screenWidth = tmpNums[0]
     screenHeight = tmpNums[1]
 
@@ -45,11 +43,11 @@ if __name__ == '__main__':
 
     if sys.argv[1] == 'ALL':
         cnt = 0
-        height = min( len(img) + 100, screenHeight//3 )
-        width = min( len(img[0]) + 100, screenWidth//3 )
+        height = min(len(img) + 100, screenHeight // 3)
+        width = min(len(img[0]) + 100, screenWidth // 3)
         print(width, height)
         for key, detector in detectorsDict.items():
-            x = width * (cnt%3)
+            x = width * (cnt % 3)
             y = height * (cnt//3)
             cv2.namedWindow(key, cv2.WINDOW_NORMAL)
             img1 = img.copy()
@@ -62,10 +60,9 @@ if __name__ == '__main__':
         img = detectorsDict[sys.argv[1]](img)
         cv2.imshow(sys.argv[1], img)
 
-    #cv2.createButton(None, kek)
+    # cv2.createButton(None, kek)
 
     while True:
         kek = cv2.waitKey()
         if 0xFF & kek == 27:
             break
-        
