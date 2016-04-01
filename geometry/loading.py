@@ -1,7 +1,7 @@
 from geometry.geometry import Point
 from geometry.geometry import Object3D
 
-__author__ = 'Artyom'
+__author__ = 'Artyom_Lobanov'
 
 
 class Parser:

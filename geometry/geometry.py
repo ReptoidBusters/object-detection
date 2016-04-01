@@ -1,4 +1,4 @@
-__author__ = 'Artyom'
+__author__ = 'Artyom_Lobanov'
 
 
 class Point:
@@ -25,3 +25,4 @@ class Object3D:
         points = [p.__repr__() for p in self.points]
         faces = [f.__repr__() for f in self.faces]
         return "Object3D[points = " + ",\n".join(points) + "]\n[faces = " + ",\n".join(faces) + "]"
+
