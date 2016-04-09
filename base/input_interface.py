@@ -10,7 +10,7 @@ class Loader:
     def __init__(self):
         pass
 
-    def read():
+    def load():
         raise NotImplementedError
 
 
@@ -24,7 +24,7 @@ class TwoFileLoader(Loader):
         self.image_address = image_address
         self.parameters_address = parameters_address
 
-    def read(self):
+    def load(self):
         if not os.path.isfile(image_address):
             raise LookupError("""No image file found at the given address or 
                 reading is not permitted""")
@@ -85,7 +85,7 @@ class BulkFolderLoader(Loader):
                 permitted""")
         super().__init__()
 
-    def read(self):
+    def load(self):
         return [FolderLoader(folder).read() for folder in \
             os.path.walk(self.folder_address)[1]]
         

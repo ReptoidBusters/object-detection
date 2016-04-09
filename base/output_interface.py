@@ -6,12 +6,12 @@ import os
 import base.frame
 
 class Writer:
-    """Abstract Write"""
+    """Abstract Writer"""
     
-    def __init__(self, key_frame):
-        self.key_frame = key_frame
+    def __init__(self):
+        pass
 
-    def save():
+    def write():
         raise NotImplementedError
 
 
@@ -21,11 +21,12 @@ class TwoFileWriter(Writer):
     self.input_list = ["image_address", "parameters_address"]
 
     def __init__(self, key_frame, image_address, parameters_address):
-        super().__init__(key_frame)
+        super().__init__()
+        self.key_frame = key_frame
         self.image_address = image_address
         self.parameters_address = parameters_address
 
-    def save(self):
+    def write(self):
         cv2.imwrite(self.image_address, self.key_frame.image)
         with open(self.parameters_address, 'w') as fout:
             for field in self.key_frame:
@@ -50,4 +51,32 @@ class FolderWriter(TwoFileWriter):
                                                  folder_name))
 
 
-methods = {"two files": TwoFileWriter, "folder": FolderWriter}
+class BulkFolderWriter(Writer):
+    """Given the dictionary of KeyFrames save them using FolderWriter in a 
+    folder given by folder address."""
+    self.input_list = ["folder_address"]
+
+    def __init__(self, key_frames, folder_address):
+        self.key_frames_dict = key_frames
+        if type(self.key_frames_dict) != dict:
+            raise ValueError("""The argument passed as KeyFrame dictionary seems 
+                to be something else""")
+        self.folder_address = folder_address
+        if not os.path.isdir(folder_address):
+            print("Making folder {}".format(folder_name), file = sys.stderr)
+            os.mkdir(folder_address)
+
+    def write(self):
+        for folder_name, key_frame in self.key_frames_dict.items():
+            if type(folder_name) != str:
+                raise ValueError("The dict key is not a string")
+            if type(key_frame) != KeyFrame:
+                raise ValueError("The dict value is not a KeyFrame")
+            FolderWriter(key_frame, os.path.join(self.folder_address, 
+                                                 folder_name)).save()
+
+
+methods = {"two files": TwoFileWriter,      \
+           "folder": FolderWriter,          \
+           "bulk folder": BulkFolderWriter, \
+           }
