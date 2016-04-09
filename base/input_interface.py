@@ -10,9 +10,6 @@ class Loader:
     def __init__(self):
         pass
 
-    def readArguments():
-        raise NotImplementedError
-
     def read():
         raise NotImplementedError
 
@@ -20,6 +17,7 @@ class Loader:
 class TwoFileLoader(Loader):
     """Read image and parameters from two distinct files given by their 
     addresses."""
+    self.input_list = ["image_address", "parameters_address"]
 
     def __init__(self, image_address, parameters_address):
         super().__init__()
@@ -56,6 +54,7 @@ class FolderLoader(TwoFileLoader):
         folder_name                                         # parameter file
         folder_name.\{OpenCV imread()-able extension\}      # image file
     The folder should NOT contain any other files."""
+    self.input_list = ["folder_address"]
 
     def __init__(self, folder_address):
         folder_name = os.path.dirname(folder_address)
@@ -77,6 +76,7 @@ class BulkFolderLoader(Loader):
         ...
     Then folder1, folder2... would be read using FolderLoader and returned as
     a dictionary \{"folder1": KeyFrame(), ...\}"""
+    self.input_list = ["top_folder_address"]
 
     def __init__(self, folder_address):
         self.folder_address = folder_address
