@@ -12,11 +12,9 @@ class KeyFrame:
         self.object_orientation = object_orientation
 
     def __iter__(self):
-        return list(x[1] for x in sorted(self.__dict__.items()) 
-                if not x[0].startswith('__'))
+        self.iterator = (x[1] for x in sorted(self.__dict__.items()) 
+                if not x[0].startswith('__') and x[0] != 'image')
+        return self
 
     def __next__(self):
-        for field in (x[1] for x in sorted(self.__dict__.items()) 
-                if not x[0].startswith('__')):
-            yield field
-        raise StopIteration
+        return next(self.iterator)

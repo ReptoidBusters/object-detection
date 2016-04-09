@@ -1,6 +1,7 @@
 import cv2
 import numpy
 import io
+import os
 import base.frame
 
 class Loader:
@@ -25,12 +26,13 @@ class TwoFileLoader(Loader):
         self.image_address = image_address
         self.parameters_address = parameters_address
 
-    def readArguments():
-        image_address = input("Image address: ")
-        parameters_address = input("Parameters address: ")
-        return (image_address, parameters_address)
-
     def read(self):
+        if not os.path.isfile(image_address):
+            raise LookupError("""No image file found at the given address or 
+                reading is not permitted""")
+        if not os.path.isfile(parameters_address):
+            raise LookupError("""No parameters file found at the given address 
+                or reading is not permitted""")
         image = cv2.imread(self.image_address)
         with open(self.parameters_address) as fin:
             matrices = fin.read().split('\n\n')
@@ -47,4 +49,23 @@ class TwoFileLoader(Loader):
                                    object_orientation)
 
 
-methods = {"two files": TwoFileLoader}
+class FolderLoader(TwoFileLoader):
+    """Read image and parameters from two distinct files given the folder 
+    containing them. The syntax is:
+    path/folder_name
+        folder_name                                         # parameter file
+        folder_name.\{OpenCV imread()-able extension\}      # image file
+    The folder should NOT contain any other files."""
+
+    def __init__(self, folder_address):
+        folder_name = os.path.dirname(folder_address)
+        if not os.path.isdir(folder_address):
+            raise LookupError("""The address is invalid or reading is not 
+                permitted""")
+        parameters, image, *trash = os.path.walk(folder_address)[2] + [''] * 2
+        if parameters != os.path.dirname(folder_name):
+            parameters, image = image, parameters
+        super().__init__(image, parameters)
+
+
+methods = {"two files": TwoFileLoader, "folder": FolderLoader}
