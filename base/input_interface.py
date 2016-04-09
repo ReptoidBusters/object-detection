@@ -51,7 +51,7 @@ class TwoFileLoader(Loader):
 
 class FolderLoader(TwoFileLoader):
     """Read image and parameters from two distinct files given the folder 
-    containing them. The syntax is:
+    containing them. The directory tree should be like:
     path/folder_name
         folder_name                                         # parameter file
         folder_name.\{OpenCV imread()-able extension\}      # image file
@@ -68,4 +68,29 @@ class FolderLoader(TwoFileLoader):
         super().__init__(image, parameters)
 
 
-methods = {"two files": TwoFileLoader, "folder": FolderLoader}
+class BulkFolderLoader(Loader):
+    """Read all files from the given top folder. The directory tree should be 
+    like:
+    path/top_folder
+        folder1
+        folder2
+        ...
+    Then folder1, folder2... would be read using FolderLoader and returned as
+    a dictionary \{"folder1": KeyFrame(), ...\}"""
+
+    def __init__(self, folder_address):
+        self.folder_address = folder_address
+        if not os.path.isdir(folder_address):
+            raise LookupError("""The address is invalid or reading is not 
+                permitted""")
+        super().__init__()
+
+    def read(self):
+        return [FolderLoader(folder).read() for folder in \
+            os.path.walk(self.folder_address)[1]]
+        
+
+methods = {"two files": TwoFileLoader,      \
+           "folder": FolderLoader,          \
+           "bulk folder":BulkFolderLoader,  \
+           }
