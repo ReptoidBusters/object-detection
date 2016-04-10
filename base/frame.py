@@ -1,19 +1,19 @@
 class KeyFrame:
-    def __init__(self, image, internal_camera_parameters,
+    def __init__(self, image, camera_orientation,
                               camera_position,
-                              camera_orientation,
-                              object_position,
-                              object_orientation):
+                              internal_camera_parameters,
+                              object_orientation,
+                              object_position):
         self.image = image
-        self.internal_camera_parameters = internal_camera_parameters
-        self.camera_position = camera_position
         self.camera_orientation = camera_orientation
-        self.object_position = object_position
+        self.camera_position = camera_position
+        self.internal_camera_parameters = internal_camera_parameters
         self.object_orientation = object_orientation
+        self.object_position = object_position
 
     def __iter__(self):
-        self.iterator = (x[1] for x in sorted(self.__dict__.items()) 
-                if not x[0].startswith('__') and x[0] != 'image')
+        self.iterator = (value for key, value in sorted(self.__dict__.items()) 
+                         if key != 'image' and not key.startswith('__'))
         return self
 
     def __next__(self):

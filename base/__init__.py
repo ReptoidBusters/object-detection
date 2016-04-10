@@ -1,4 +1,4 @@
-'''Submodule containing IO interface and Frame class'''
+'''Submodule containing I/O interface and Frame class'''
 
 import base.input_interface
 import base.output_interface
