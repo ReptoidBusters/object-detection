@@ -19,3 +19,5 @@ Windows, you can find
 (requires wheel). You would also need 
 [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) 
 in this case.
+
+TODO: Resolve problem with numpy.savetxt adding "#" between data
