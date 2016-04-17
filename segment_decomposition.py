@@ -125,10 +125,10 @@ def find_support(edge_map, point_orientation, initial_point):
         for d in directions:
             next_point = point + d
             
-            if (edge_map[next_point[1]][next_point[0]] == 0 or
-                used_point[next_point[1]][next_point[0]] or
-                not (0 <= next_point[1] < len(edge_map) and
-                     0 <= next_point[0] < len(edge_map[0]))):
+            if (not (0 <= next_point[1] < len(edge_map) and
+                     0 <= next_point[0] < len(edge_map[0])) or
+                edge_map[next_point[1]][next_point[0]] == 0 or
+                used_point[next_point[1]][next_point[0]]):
                 continue
             
             queue.append(next_point)
@@ -149,19 +149,23 @@ def linearize(edge_map, orientation_map, quantization_channels):
     segments_list = []
     while len(points_list):
         support = PointSupport(numpy.array([0, 0]), 0.0)
-        for i in range(1, 10):
-            point = points_list[random.randint(0, len(points_list) - 1)]
+        candidates = 10
+        
+        while len(points_list) and candidates:
+            index = random.randint(0, len(points_list) - 1)
+            point = points_list[index]
+            if edge_map[point[1]][point[0]] == 0:
+                points_list.pop(index)
+                continue
+                
+            candidates -= 1
             newsupport = find_support(edge_map, orientation_map[point[1]][point[0]], point)
             if newsupport.support >= support.support:
                 support = newsupport
-
+        
         segments_list.append(LineSegment(support))
         for support_point in support.list:
             edge_map[support_point[1]][support_point[0]] = 0
-            for i in range(0, len(points_list)):
-                if (support_point == points_list[i]).all():
-                    points_list.pop(i)
-                    break
 
     return segments_list
     
