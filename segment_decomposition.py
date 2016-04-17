@@ -127,8 +127,8 @@ def find_support(edge_map, point_orientation, initial_point):
             
             if (edge_map[next_point[1]][next_point[0]] == 0 or
                 used_point[next_point[1]][next_point[0]] or
-                not (0 <= next_point[0] < len(edge_map) and
-                     0 <= next_point[1] < len(edge_map[0]))):
+                not (0 <= next_point[1] < len(edge_map) and
+                     0 <= next_point[0] < len(edge_map[0]))):
                 continue
             
             queue.append(next_point)
@@ -138,7 +138,7 @@ def find_support(edge_map, point_orientation, initial_point):
 
 
 def linearize(edge_map, orientation_map, quantization_channels):
-    #orientation_map = quantized(orientation_map, quantization_channels)
+    orientation_map = quantized(orientation_map, quantization_channels)
 
     points_list = []
     for i in range(0, len(edge_map)):
