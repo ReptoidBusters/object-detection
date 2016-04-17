@@ -46,16 +46,18 @@ class PointSupport:
         self.list = [point]
     
     def angle_deviation(self, point):
-        cross_product = numpy.cross(self.point, point)
-        dot_product = numpy.dot(self.point, point)
-        point_orientation = math.atan2(cross_product, dot_product) + math.pi
-        point_orientation %= math.pi
-        return abs(self.orientation - point_orientation)
+        line_vector = numpy.array([math.cos(self.orientation), math.sin(self.orientation)])
+        point_vector = point - self.point
+        
+        cross_product = numpy.cross(line_vector, point_vector)
+        dot_product = numpy.dot(line_vector, point_vector)
+        deviation = math.atan2(cross_product, dot_product) + 2 * math.pi
+        return deviation % math.pi
     
     def residual(self, point):
         distance = numpy.linalg.norm(self.point - point)
         res = distance * math.sin(self.angle_deviation(point))
-        return abs(res)
+        return res
     
     def add_point(self, point):
         if self.residual(point) > 2:  # Need to choose thresholds properly
@@ -119,7 +121,7 @@ def find_support(edge_map, point_orientation, initial_point):
         point = queue.popleft()
         if not support.add_point(point):
             continue
-            
+
         for d in directions:
             next_point = point + d
             
@@ -136,8 +138,8 @@ def find_support(edge_map, point_orientation, initial_point):
 
 
 def linearize(edge_map, orientation_map, quantization_channels):
-    orientation_map = quantized(orientation_map, quantization_channels)
-    
+    #orientation_map = quantized(orientation_map, quantization_channels)
+
     points_list = []
     for i in range(0, len(edge_map)):
         for j in range(0, len(edge_map[i])):
@@ -152,7 +154,7 @@ def linearize(edge_map, orientation_map, quantization_channels):
             newsupport = find_support(edge_map, orientation_map[point[1]][point[0]], point)
             if newsupport.support >= support.support:
                 support = newsupport
-        
+
         segments_list.append(LineSegment(support))
         for support_point in support.list:
             edge_map[support_point[1]][support_point[0]] = 0
@@ -160,6 +162,6 @@ def linearize(edge_map, orientation_map, quantization_channels):
                 if (support_point == points_list[i]).all():
                     points_list.pop(i)
                     break
-    
+
     return segments_list
     
