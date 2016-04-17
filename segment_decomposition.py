@@ -57,12 +57,11 @@ class PointSupport:
     def residual(self, point):
         distance = numpy.linalg.norm(self.point - point)
         res = distance * math.sin(self.angle_deviation(point))
-        print(res)
         return res
     
     def add_point(self, point):
         if self.residual(point) > 0.5:  # Need to choose thresholds properly
-            return
+            return False
         
         self.support += 1
         self.list.append(point)
