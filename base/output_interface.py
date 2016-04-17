@@ -31,7 +31,9 @@ class TwoFileWriter(Writer):
         open(self.parameters_address, 'w').close()
         with open(self.parameters_address, 'ab') as fout:
             for field in self.key_frame:
-                numpy.savetxt(fout, field, footer = '\n')
+                numpy.savetxt(fout, field, header = '', 
+                                           footer = '\n',
+                                           comments = '')
 
 
 class FolderWriter(TwoFileWriter):

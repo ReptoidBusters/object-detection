@@ -1,6 +1,7 @@
 import cv2
 import numpy
 import io
+import sys
 import os
 import base.frame
 
@@ -27,9 +28,11 @@ class TwoFileLoader(Loader):
 
     def load(self):
         if not os.path.isfile(self.image_address):
+            print(self.image_address, file = sys.stderr)
             raise LookupError("""No image file found at the given address or 
                 reading is not permitted""")
         if not os.path.isfile(self.parameters_address):
+            print(self.parameters_address, file = sys.stderr)
             raise LookupError("""No parameters file found at the given address 
                 or reading is not permitted""")
         image = cv2.imread(self.image_address)
@@ -91,7 +94,8 @@ class BulkFolderLoader(Loader):
     def load(self):
         result = {}
         for folder in list(os.walk(self.folder_address))[0][1]:
-            result.update(FolderLoader(folder).load())
+            loader = FolderLoader(os.path.join(self.folder_address, folder))
+            result.update(loader.load())
         return result
         
 
