@@ -2,7 +2,7 @@ import cv2
 import numpy
 import collections
 import math
-
+import random
 
 def get_edge_map(img):
     return cv2.Canny(img, 100, 200)  # Need to choose thresholds properly
@@ -43,7 +43,7 @@ class PointSupport:
         self.point = point
         self.orientation = orientation
         self.support = 0
-        self.list = []
+        self.list = [point]
     
     
     def angle_deviation(self, point):
@@ -60,7 +60,7 @@ class PointSupport:
         return res
     
     def add_point(self, point):
-        if self.residual(point) > 0.5:  # Need to choose thresholds properly
+        if self.residual(point) > 3:  # Need to choose thresholds properly
             return False
         
         self.support += 1
@@ -105,7 +105,25 @@ def find_support(edge_map, point_orientation, initial_point):
 
 def linearize(edge_map, orientation_map, quantization_channels):
     orientation_map = quantized(orientation_map, quantization_channels)
-    # TODO
-    pass
-
+    
+    points_list = []
+    for i in range(0, len(edge_map)):
+        for j in range(0, len(edge_map[i])):
+            if edge_map[i][j] == 255:
+                points_list.append(numpy.array([j, i]))
+    
+    while len(points_list):
+        support = PointSupport(numpy.array([0, 0]), 0.0)
+        for i in range(1, 10):
+            point = points_list[random.randint(0, len(points_list) - 1)]
+            newsupport = find_support(edge_map, orientation_map[point[1]][point[0]], point)
+            if newsupport.support >= support.support:
+                support = newsupport
+            
+        for support_point in support.list:
+            edge_map[support_point[1]][support_point[0]] = 0
+            for i in range(0, len(points_list)):
+                if (support_point == points_list[i]).all():
+                    points_list.pop(i)
+                    break
 
