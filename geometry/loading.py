@@ -44,8 +44,10 @@ class Parser:
                 i += len(self.points)
             return i
         params = line.split()  # get tokens
-        params = [word.split("/")[0] for word in params[1:]]  # cut numbers of points from line
-        params = [validate(num) for num in params]  # translate numbers to valid index
+        # cut numbers of points from line
+        params = [word.split("/")[0] for word in params[1:]]
+        # translate numbers to valid index
+        params = [validate(num) for num in params]
         self.faces.append(tuple(params))
 
     def get_object(self):
@@ -65,6 +67,6 @@ class Parser:
 
 
 def load_object(path):
-    p = Parser()
-    p.read_file(path)
-    return p.get_object()
+    parser = Parser()
+    parser.read_file(path)
+    return parser.get_object()
