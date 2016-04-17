@@ -163,6 +163,9 @@ def linearize(edge_map, orientation_map, quantization_channels):
             if newsupport.support >= support.support:
                 support = newsupport
         
+        if support.support < 5:
+            break
+        
         segments_list.append(LineSegment(support))
         for support_point in support.list:
             edge_map[support_point[1]][support_point[0]] = 0
