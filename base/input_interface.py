@@ -43,15 +43,17 @@ class TwoFileLoader(Loader):
             def read_matrix(string):
                 return numpy.loadtxt(io.StringIO(string))
             camera_orientation = read_matrix(matrices[0])
-            camera_position = read_matrix(matrices[1])
+            camera_translation = read_matrix(matrices[1])
+            camera_position = frame.Position(camera_translation,
+                                             camera_orientation)
             internal_camera_parameters = read_matrix(matrices[2])
             object_orientation = read_matrix(matrices[3])
-            object_position = read_matrix(matrices[4])
+            object_translation = read_matrix(matrices[4])
+            object_position = frame.Position(object_translation,
+                                             object_orientation)
         return {self.keyframe_id: frame.KeyFrame(image,
-                                                 camera_orientation,
                                                  camera_position,
                                                  internal_camera_parameters,
-                                                 object_orientation,
                                                  object_position)}
 
 
