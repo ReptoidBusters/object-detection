@@ -60,7 +60,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=zip-builtin-not-iterating,indexing-exception,reload-builtin,basestring-builtin,unichr-builtin,input-builtin,old-octal-literal,range-builtin-not-iterating,print-statement,delslice-method,filter-builtin-not-iterating,next-method-called,long-builtin,old-ne-operator,backtick,dict-iter-method,execfile-builtin,raw_input-builtin,map-builtin-not-iterating,reduce-builtin,getslice-method,parameter-unpacking,hex-method,xrange-builtin,useless-suppression,round-builtin,apply-builtin,cmp-builtin,oct-method,using-cmp-argument,no-absolute-import,unpacking-in-except,coerce-method,old-raise-syntax,unicode-builtin,suppressed-message,coerce-builtin,standarderror-builtin,dict-view-method,cmp-method,old-division,buffer-builtin,long-suffix,nonzero-method,metaclass-assignment,setslice-method,file-builtin,import-star-module-level,raising-string,intern-builtin,missing-docstring
+disable=apply-builtin,backtick,basestring-builtin,buffer-builtin,cmp-builtin,cmp-method,coerce-builtin,coerce-method,delslice-method,dict-iter-method,dict-view-method,execfile-builtin,file-builtin,filter-builtin-not-iterating,getslice-method,hex-method,import-star-module-level,indexing-exception,input-builtin,intern-builtin,locally-disabled,long-builtin,long-suffix,map-builtin-not-iterating,metaclass-assignment,missing-docstring,next-method-called,no-absolute-import,nonzero-method,oct-method,old-division,old-ne-operator,old-octal-literal,old-raise-syntax,parameter-unpacking,print-statement,raising-string,range-builtin-not-iterating,raw_input-builtin,reduce-builtin,reload-builtin,round-builtin,setslice-method,standarderror-builtin,suppressed-message,unichr-builtin,unicode-builtin,unpacking-in-except,useless-suppression,using-cmp-argument,xrange-builtin,zip-builtin-not-iterating
 
 
 [REPORTS]
@@ -329,7 +329,7 @@ max-parents=7
 max-attributes=7
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=2
+min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20
