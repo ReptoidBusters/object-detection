@@ -1,7 +1,7 @@
 '''Submodule containing I/O interface and Frame class'''
 
-import base.input_interface
-import base.output_interface
-import base.frame
+from . import frame
+from . import input_interface
+from . import output_interface
 
 __all__ = ['input_interface', 'frame', 'output_interface']
