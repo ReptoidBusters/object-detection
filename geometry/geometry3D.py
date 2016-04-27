@@ -104,18 +104,3 @@ class ConvexPolygon:
                 return False
         return True
 
-
-
-"""
-p1, p2, p3 = map(Point, (1, 4, 7), (2, 5, 8), (3, 6, 9), (1, 2 , 1))
-p4 = Point(9, 18, 12, 3)
-p4.normalize()
-print(p1)
-ps = PointStore([p1, p2, p3, p4])
-ps.normalize_all()
-print(ps.to_points_array())
-
-"""
-
-p = Plane.create_plane(np.array([0, 1, 0]), np.array([0, 0, 1]), np.array([1, 0, 0]))
-print(p)

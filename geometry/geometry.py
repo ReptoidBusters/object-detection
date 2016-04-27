@@ -94,19 +94,3 @@ class PointStore:
 
     def to_points_array(self):
         return [self.get_point(i) for i in range(self.size)]
-
-
-
-"""
-p4.normalize()
-print(p1)
-ps = PointStore([p1, p2, p3, p4])
-ps.normalize_all()
-print(ps.to_points_array())
-
-p1, p2, p3 = map(Point, (1, 4, 7), (2, 5, 8), (3, 6, 9), (1, 2 , 1))
-p4 = Point(9, 18, 12, 3)
-points = [p1, p2, p3, p4]
-p = map(lambda x: x.normalize(), points)
-print(*points)
-"""
