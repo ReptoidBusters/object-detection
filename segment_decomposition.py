@@ -81,6 +81,15 @@ class LineSegment:
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
 
+    def _get_point(self, index):
+        if not self.ytype:
+            point = numpy.array([index, math.tan(self.orientation) * index])
+        else:
+            point = numpy.array([1 / math.tan(self.orientation) * index, index])
+        
+        return point + self.point
+    
+
     def _calculate_bounds(self, support):
         if self.ytype:
             axis = 1
@@ -96,15 +105,9 @@ class LineSegment:
 
     def get_points_list(self):
         result = []
-        if not self.ytype:
-            for x in range(self.left_bound, self.right_bound):
-                point = numpy.array([x, math.tan(self.orientation) * x])
-                result.append(point + self.point)
-        else:
-            for y in range(self.left_bound, self.right_bound):
-                point = numpy.array([1 / math.tan(self.orientation) * y, y])
-                result.append(point + self.point)
-
+        for index in range(self.left_bound, self.right_bound):
+            result.append(self._get_point(index))
+                
         return result
 
 
