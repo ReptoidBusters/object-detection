@@ -27,25 +27,29 @@ def get_orientation_map(img):
 
 
 def quantized(orientation_map, quantization_channels):
-    quantized_map = numpy.ndarray(orientation_map.shape, float)
-    unit_angle = math.pi / quantization_channels
-
+    quantized_map = numpy.ndarray(orientation_map.shape, int)
+    
     for i, row in enumerate(orientation_map):
         for j, angle in enumerate(row):
             units_number = int(round(angle / math.pi * quantization_channels))
             units_number %= quantization_channels
-
-            quantized_map[i][j] = unit_angle * units_number
+            quantized_map[i][j] = units_number
 
     return quantized_map
 
 
+def angle_from_channel(channel, quantization_channels):
+    unit_angle = math.pi / quantization_channels
+    return channel * unit_angle
+
+
 class PointSupport:
-    def __init__(self, point, orientation):
+    def __init__(self, point, orientation_channel, quantization_channels):
         self.point = point
-        self.orientation = orientation
+        self.orientation = angle_from_channel(orientation_channel, quantization_channels)
+        self.orientation_channel = orientation_channel
         self.support = 0
-        self.list = [point]
+        self.list = []
 
     def angle_deviation(self, point):
         line_vector = numpy.array([math.cos(self.orientation),
@@ -75,6 +79,7 @@ class LineSegment:
     def __init__(self, support, maxx, maxy):
         self.point = support.point
         self.orientation = support.orientation
+        self.orientation_channel = support.orientation_channel
         self.ytype = self._determine_type()
         self._calculate_bounds(support, maxx, maxy)
 
@@ -117,15 +122,16 @@ class LineSegment:
             
             self.right_bound -= 1
 
+
     def get_points_list(self):
         result = []
-        for index in range(self.left_bound, self.right_bound):
+        for index in range(self.left_bound, self.right_bound + 1):
             result.append(self._get_point(index))
                 
         return result
 
 
-def find_support(edge_map, point_orientation, initial_point):
+def find_support(edge_map, point_orientation_channel, quantization_channels, initial_point):
     directions = [numpy.array([0, 1]), numpy.array([1, 0]),
                   numpy.array([0, -1]), numpy.array([-1, 0]),
                   numpy.array([1, 1]), numpy.array([1, -1]),
@@ -134,7 +140,7 @@ def find_support(edge_map, point_orientation, initial_point):
     used_point = numpy.ndarray(edge_map.shape, bool)
     used_point.fill(False)
 
-    support = PointSupport(initial_point, point_orientation)
+    support = PointSupport(initial_point, point_orientation_channel, quantization_channels)
 
     queue = collections.deque()
     queue.append(initial_point)
@@ -163,16 +169,16 @@ def find_support(edge_map, point_orientation, initial_point):
 def linearize(edge_map, orientation_map, quantization_channels):
     orientation_map = quantized(orientation_map, quantization_channels)
     base_points = copy.deepcopy(edge_map)
+
     points_list = []
     for i in range(0, len(base_points)):
-
         for j in range(0, len(base_points[i])):
             if base_points[i][j] == 255:
                 points_list.append(numpy.array([j, i]))
 
     segments_list = []
     while len(points_list):
-        support = PointSupport(numpy.array([0, 0]), 0.0)
+        support = PointSupport(numpy.array([0, 0]), 0.0, quantization_channels)
         candidates = 10
 
         while len(points_list) and candidates:
@@ -186,6 +192,7 @@ def linearize(edge_map, orientation_map, quantization_channels):
             candidates -= 1
             newsupport = find_support(edge_map,
                                       orientation_map[point[1]][point[0]],
+                                      quantization_channels,
                                       point)
 
             if newsupport.support >= support.support:
