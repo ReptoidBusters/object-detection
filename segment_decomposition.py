@@ -72,25 +72,25 @@ class PointSupport:
 
 
 class LineSegment:
-    def __init__(self, support):
+    def __init__(self, support, maxx, maxy):
         self.point = support.point
         self.orientation = support.orientation
         self.ytype = self._determine_type()
-        self._calculate_bounds(support)
+        self._calculate_bounds(support, maxx, maxy)
 
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
 
     def _get_point(self, index):
         if not self.ytype:
-            point = numpy.array([index, math.tan(self.orientation) * index])
+            point = numpy.array([index, int(round(math.tan(self.orientation) * index))])
         else:
-            point = numpy.array([1 / math.tan(self.orientation) * index, index])
+            point = numpy.array([int(round(1 / math.tan(self.orientation) * index)), index])
         
         return point + self.point
     
 
-    def _calculate_bounds(self, support):
+    def _calculate_bounds(self, support, maxx, maxy):
         if self.ytype:
             axis = 1
         else:
@@ -101,7 +101,21 @@ class LineSegment:
         for point in support.list:
             candidate = point[axis] - self.point[axis]
             self.left_bound = min(self.left_bound, candidate)
-            self.right_bound = max(self.right_bound, candidate)
+            self.right_bound = max(self.right_bound, candidate)     
+        
+        while True:
+            point = self._get_point(self.left_bound)
+            if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
+                break
+            
+            self.left_bound += 1
+            
+        while True:
+            point = self._get_point(self.right_bound)
+            if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
+                break
+            
+            self.right_bound -= 1
 
     def get_points_list(self):
         result = []
@@ -149,9 +163,9 @@ def find_support(edge_map, point_orientation, initial_point):
 def linearize(edge_map, orientation_map, quantization_channels):
     orientation_map = quantized(orientation_map, quantization_channels)
     base_points = copy.deepcopy(edge_map)
-
     points_list = []
     for i in range(0, len(base_points)):
+
         for j in range(0, len(base_points[i])):
             if base_points[i][j] == 255:
                 points_list.append(numpy.array([j, i]))
@@ -181,7 +195,7 @@ def linearize(edge_map, orientation_map, quantization_channels):
             base_points[support.point[1]][support.point[0]] = 0
             continue
 
-        segments_list.append(LineSegment(support))
+        segments_list.append(LineSegment(support, len(base_points) - 1, len(base_points[0]) - 1))
         for support_point in support.list:
             base_points[support_point[1]][support_point[0]] = 0
             edge_map[support_point[1]][support_point[0]] = 0
