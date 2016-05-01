@@ -3,6 +3,7 @@ import numpy
 import collections
 import math
 import random
+import copy
 
 
 def get_edge_map(img):
@@ -144,11 +145,12 @@ def find_support(edge_map, point_orientation, initial_point):
 
 def linearize(edge_map, orientation_map, quantization_channels):
     orientation_map = quantized(orientation_map, quantization_channels)
+    base_points = copy.deepcopy(edge_map)
 
     points_list = []
-    for i in range(0, len(edge_map)):
-        for j in range(0, len(edge_map[i])):
-            if edge_map[i][j] == 255:
+    for i in range(0, len(base_points)):
+        for j in range(0, len(base_points[i])):
+            if base_points[i][j] == 255:
                 points_list.append(numpy.array([j, i]))
 
     segments_list = []
@@ -159,8 +161,9 @@ def linearize(edge_map, orientation_map, quantization_channels):
         while len(points_list) and candidates:
             index = random.randint(0, len(points_list) - 1)
             point = points_list[index]
-            if edge_map[point[1]][point[0]] == 0:
-                points_list.pop(index)
+            if base_points[point[1]][point[0]] == 0:
+                points_list[index], points_list[-1] = points_list[-1], points_list[index]
+                points_list.pop()
                 continue
 
             candidates -= 1
@@ -172,10 +175,12 @@ def linearize(edge_map, orientation_map, quantization_channels):
                 support = newsupport
 
         if support.support < 5:
-            break
+            base_points[support.point[1]][support.point[0]] = 0
+            continue
 
         segments_list.append(LineSegment(support))
         for support_point in support.list:
+            base_points[support_point[1]][support_point[0]] = 0
             edge_map[support_point[1]][support_point[0]] = 0
 
     return segments_list
