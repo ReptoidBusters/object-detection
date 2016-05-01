@@ -167,7 +167,6 @@ def find_support(edge_map, point_orientation_channel, quantization_channels, ini
 
 
 def linearize(edge_map, orientation_map, quantization_channels):
-    orientation_map = quantized(orientation_map, quantization_channels)
     base_points = copy.deepcopy(edge_map)
 
     points_list = []
