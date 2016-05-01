@@ -10,6 +10,16 @@ def get_edge_map(img):
     return cv2.Canny(img, 100, 200)  # Need to choose thresholds properly
 
 
+def convert_to_binary(img):
+  binary_img = numpy.ndarray(img.shape[0:2], numpy.uint8)
+  for i in range(0, len(img)):
+        for j in range(0, len(img[i])):
+            if img[i][j].any():
+                binary_img[i][j] = 255
+  
+  return binary_img
+
+
 def get_orientation_map(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
