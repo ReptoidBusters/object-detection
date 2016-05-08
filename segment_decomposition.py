@@ -11,13 +11,13 @@ def get_edge_map(img):
 
 
 def convert_to_binary(img):
-  binary_img = numpy.ndarray(img.shape[0:2], numpy.uint8)
-  for i in range(0, len(img)):
+    binary_img = numpy.ndarray(img.shape[0:2], numpy.uint8)
+    for i in range(0, len(img)):
         for j in range(0, len(img[i])):
             if img[i][j].any():
                 binary_img[i][j] = 255
   
-  return binary_img
+    return binary_img
 
 
 def get_orientation_map(img):
@@ -174,6 +174,29 @@ def find_support(edge_map, point_orientation_channel, quantization_channels, ini
             used_point[next_point[1]][next_point[0]] = True
 
     return support
+
+
+def guess_quantized_orientation_map(edge_map, quantization_channels):
+    orientation_map = numpy.ndarray(edge_map.shape, numpy.float32)
+    for i in range(0, len(orientation_map)):
+        for j in range(0, len(orientation_map[i])):
+            if edge_map[i][j] == 0:
+                orientation_map[i][j] = 0
+                continue
+            
+            support = PointSupport(numpy.array([0, 0]), 0.0, quantization_channels)
+            for q in range(0, quantization_channels):
+                newsupport = find_support(edge_map,
+                                      q,
+                                      quantization_channels,
+                                      numpy.array([j, i]))
+
+                if newsupport.support >= support.support:
+                    support = newsupport
+            
+            orientation_map[i][j] = support.orientation_channel
+
+    return orientation_map
 
 
 def linearize(edge_map, orientation_map, quantization_channels):
