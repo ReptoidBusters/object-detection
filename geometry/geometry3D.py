@@ -1,5 +1,7 @@
 import numpy as np
 import numpy.linalg as lin
+from math import cos
+from math import sin
 __author__ = 'Artyom_Lobanov'
 
 """
@@ -29,7 +31,7 @@ class Plane:
         tmp = self.normal.dot(ray.d)
         if not tmp:
             return None
-        distance = -(self.normal.dot(ray.begin) + self.d) / tmp  # begin * k + D = -t * d * k
+        distance = -(self.normal.dot(ray.begin) + self.d) / tmp
         return ray.get_point(distance)
 
     @staticmethod
@@ -41,7 +43,7 @@ class Plane:
         normal = np.cross(point2 - point1, point3 - point1)
         length = lin.norm(normal)
         if not length:  # normal = 0
-            raise RuntimeError("Can't create plane: All points should be different")
+            raise RuntimeError("Can't create plane: points must be different")
         normal /= length  # now normal is normalized
         d = - np.dot(normal, point1)
         return Plane(normal, d)
@@ -104,3 +106,27 @@ class ConvexPolygon:
                 return False
         return True
 
+
+def rotation_matrix_x(alpha):
+    return np.matrix([[1, 0, 0],
+                      [0, cos(alpha), -sin(alpha)],
+                      [0, sin(alpha),  cos(alpha)]])
+
+
+def rotation_matrix_y(alpha):
+    return np.matrix([[cos(alpha), 0, sin(alpha)],
+                      [0, 1, 0],
+                      [-sin(alpha), 0,  cos(alpha)]])
+
+
+def rotation_matrix_z(alpha):
+    return np.matrix([[cos(alpha), -sin(alpha), 0],
+                      [sin(alpha), cos(alpha), 0],
+                      [0, 0, 1]])
+
+
+def rotation_matrix(angles):
+    matrix_x = rotation_matrix_x(angles[0])
+    matrix_y = rotation_matrix_y(angles[1])
+    matrix_z = rotation_matrix_z(angles[2])
+    return matrix_x.dot(matrix_y).dot(matrix_z)

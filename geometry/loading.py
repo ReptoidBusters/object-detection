@@ -1,5 +1,5 @@
-from geometry.geometry import Point
 from geometry.geometry import Object3D
+import numpy as np
 
 __author__ = 'Artyom_Lobanov'
 
@@ -31,9 +31,8 @@ class Parser:
     def parse_point(self, line):
         args = [float(x) for x in line.split()[1:]]
         if len(args) == 3:
-            self.points.append(Point(args[0], args[1], args[2]))
-        else:
-            self.points.append(Point(args[0], args[1], args[2], args[3]))
+            args += [1]
+        self.points.append(np.asarray(args))
 
     def parse_face(self, line):
         def validate(i):
@@ -48,7 +47,7 @@ class Parser:
         params = [word.split("/")[0] for word in params[1:]]
         # translate numbers to valid index
         params = [validate(num) for num in params]
-        self.faces.append(tuple(params))
+        self.faces.append(np.asarray(params))
 
     def get_object(self):
         return self.object
