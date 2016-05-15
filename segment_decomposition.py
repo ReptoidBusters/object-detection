@@ -235,9 +235,7 @@ def linearize(edge_map, orientation_map, quantization_channels):
             index = random.randint(0, len(points_list) - 1)
             point = points_list[index]
             if base_points[point[1]][point[0]] == 0:
-                points_list[index], points_list[-1] =
-                points_list[-1], points_list[index]
-
+                points_list[index], points_list[-1] = points_list[-1], points_list[index]
                 points_list.pop()
                 continue
 
