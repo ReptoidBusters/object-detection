@@ -87,23 +87,33 @@ class PointSupport:
 
 class LineSegment:
     def __init__(self, support, maxx, maxy):
-        self.point = support.point
         self.orientation = support.orientation
-        self.orientation_channel = support.orientation_channel
         self.ytype = self._determine_type()
+        self.point = self._get_base_point(support)
+        self.orientation_channel = support.orientation_channel
         self._calculate_bounds(support, maxx, maxy)
 
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
 
-    def _get_point(self, index):
+    def _get_point_relative(self, index):
         if not self.ytype:
             point = numpy.array([index, int(round(math.tan(self.orientation) * index))])
         else:
             point = numpy.array([int(round(1 / math.tan(self.orientation) * index)), index])
         
-        return point + self.point
+        return point
+
+    def _get_point(self, index):
+        return self.point + self._get_point_relative(index)
     
+    def _get_base_point(self, support):
+        if not self.ytype:
+            point = self._get_point_relative(support.point[0])
+        else:
+            point = self._get_point_relative(support.point[1])
+            
+        return support.point - point
 
     def _calculate_bounds(self, support, maxx, maxy):
         if self.ytype:
@@ -111,8 +121,8 @@ class LineSegment:
         else:
             axis = 0
 
-        self.left_bound = 0
-        self.right_bound = 0
+        self.left_bound = support.point[axis]
+        self.right_bound = support.point[axis]
         for point in support.list:
             candidate = point[axis] - self.point[axis]
             self.left_bound = min(self.left_bound, candidate)
