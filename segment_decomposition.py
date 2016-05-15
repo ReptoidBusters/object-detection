@@ -16,7 +16,7 @@ def convert_to_binary(img):
         for j in range(0, len(img[i])):
             if img[i][j].any():
                 binary_img[i][j] = 255
-  
+
     return binary_img
 
 
@@ -38,7 +38,7 @@ def get_orientation_map(img):
 
 def quantized(orientation_map, quantization_channels):
     quantized_map = numpy.ndarray(orientation_map.shape, int)
-    
+
     for i, row in enumerate(orientation_map):
         for j, angle in enumerate(row):
             units_number = int(round(angle / math.pi * quantization_channels))
@@ -56,7 +56,8 @@ def angle_from_channel(channel, quantization_channels):
 class PointSupport:
     def __init__(self, point, orientation_channel, quantization_channels):
         self.point = point
-        self.orientation = angle_from_channel(orientation_channel, quantization_channels)
+        self.orientation = angle_from_channel(orientation_channel,
+                                              quantization_channels)
         self.orientation_channel = orientation_channel
         self.support = 0
         self.list = []
@@ -98,21 +99,23 @@ class LineSegment:
 
     def _get_point_relative(self, index):
         if not self.ytype:
-            point = numpy.array([index, int(round(math.tan(self.orientation) * index))])
+            y = int(round(math.tan(self.orientation) * index))
+            point = numpy.array([index, y])
         else:
-            point = numpy.array([int(round(1 / math.tan(self.orientation) * index)), index])
-        
+            x = int(round(1 / math.tan(self.orientation) * index))
+            point = numpy.array([x, index])
+
         return point
 
     def _get_point(self, index):
         return self.point + self._get_point_relative(index)
-    
+
     def _get_base_point(self, support):
         if not self.ytype:
             point = self._get_point_relative(support.point[0])
         else:
             point = self._get_point_relative(support.point[1])
-            
+
         return support.point - point
 
     def _calculate_bounds(self, support, maxx, maxy):
@@ -126,32 +129,32 @@ class LineSegment:
         for point in support.list:
             candidate = point[axis] - self.point[axis]
             self.left_bound = min(self.left_bound, candidate)
-            self.right_bound = max(self.right_bound, candidate)     
-        
+            self.right_bound = max(self.right_bound, candidate)
+
         while True:
             point = self._get_point(self.left_bound)
             if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
                 break
-            
+
             self.left_bound += 1
-            
+
         while True:
             point = self._get_point(self.right_bound)
             if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
                 break
-            
-            self.right_bound -= 1
 
+            self.right_bound -= 1
 
     def get_points_list(self):
         result = []
         for index in range(self.left_bound, self.right_bound + 1):
             result.append(self._get_point(index))
-                
+
         return result
 
 
-def find_support(edge_map, point_orientation_channel, quantization_channels, initial_point):
+def find_support(edge_map, point_orientation_channel,
+                 quantization_channels, initial_point):
     directions = [numpy.array([0, 1]), numpy.array([1, 0]),
                   numpy.array([0, -1]), numpy.array([-1, 0]),
                   numpy.array([1, 1]), numpy.array([1, -1]),
@@ -160,7 +163,9 @@ def find_support(edge_map, point_orientation_channel, quantization_channels, ini
     used_point = numpy.ndarray(edge_map.shape, bool)
     used_point.fill(False)
 
-    support = PointSupport(initial_point, point_orientation_channel, quantization_channels)
+    support = PointSupport(initial_point,
+                           point_orientation_channel,
+                           quantization_channels)
 
     queue = collections.deque()
     queue.append(initial_point)
@@ -193,17 +198,20 @@ def guess_quantized_orientation_map(edge_map, quantization_channels):
             if edge_map[i][j] == 0:
                 orientation_map[i][j] = 0
                 continue
-            
-            support = PointSupport(numpy.array([0, 0]), 0.0, quantization_channels)
+
+            support = PointSupport(numpy.array([0, 0]),
+                                   0.0,
+                                   quantization_channels)
+
             for q in range(0, quantization_channels):
                 newsupport = find_support(edge_map,
-                                      q,
-                                      quantization_channels,
-                                      numpy.array([j, i]))
+                                          q,
+                                          quantization_channels,
+                                          numpy.array([j, i]))
 
                 if newsupport.support >= support.support:
                     support = newsupport
-            
+
             orientation_map[i][j] = support.orientation_channel
 
     return orientation_map
@@ -227,7 +235,9 @@ def linearize(edge_map, orientation_map, quantization_channels):
             index = random.randint(0, len(points_list) - 1)
             point = points_list[index]
             if base_points[point[1]][point[0]] == 0:
-                points_list[index], points_list[-1] = points_list[-1], points_list[index]
+                points_list[index], points_list[-1] =
+                points_list[-1], points_list[index]
+
                 points_list.pop()
                 continue
 
@@ -244,7 +254,10 @@ def linearize(edge_map, orientation_map, quantization_channels):
             base_points[support.point[1]][support.point[0]] = 0
             continue
 
-        segments_list.append(LineSegment(support, len(base_points) - 1, len(base_points[0]) - 1))
+        segments_list.append(LineSegment(support,
+                                         len(base_points) - 1,
+                                         len(base_points[0]) - 1))
+
         for support_point in support.list:
             base_points[support_point[1]][support_point[0]] = 0
             edge_map[support_point[1]][support_point[0]] = 0
