@@ -8,8 +8,8 @@ class KeyFramePreview(QWidget):
         image + matched object projection
     """
 
-    def __init__(self, parent=None, _label, _keyframe, _object, *args, **kwargs):
-        super().__init__(parent, *args, *kwargs)
+    def __init__(self, parent=None, _label, _keyframe, _object):
+        super().__init__(parent)
         self.keyframe = _keyframe
         self.nameLabel = QLabel(_label)
         self.nameLabel.setAlignment(Qt.AlignCenter)

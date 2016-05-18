@@ -1,17 +1,51 @@
 import collections
 import argparse
 import base
+import sys
+import PySide.QtGui
+from geometry import load_object
+from gui      import KeyFramePreview
 
 
 def read_args(args_list):
     return (input("Enter {}: ".format(arg)) for arg in args_list)
 
 
-def process(data):
-    del data
+def process(data, obj):
+    app = QtGui.QApplication(sys.argv)
+
+    window = QtGui.QMainWindow()
+    window.setWindowTitle('Images')
+    window.setFixedSize(1248, 702)
+    window.setFocus()
+
+    widget = QWidget()
+    layout = QVBoxLayout(window)
+    for label, keyframe in data.items():
+        layout.addWidget(KeyFramePreview(widget, label, keyframe, obj))
+    widget.setLayout(layout)
+
+    scroll = QScrollArea()
+    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    scroll.setWidgetResizable(False)
+    scroll.setWidget(widget)
+    
+    vLayout = QVBoxLayout(window)
+    vLayout.addWidget(scroll)
+    self.setLayout(vLayout)
+    
+    window.show()
+    app.exec_()
 
 
 def cli(number_of_inputs):
+    object_address = input("Input object file address: ")
+    if not os.path.isfile(self.):
+        print(object_address, file=sys.stderr)
+        raise LookupError("""No object file found at the given address or
+                          reading is not permitted""")
+    obj = load_object(object_address)
     data = {}
     counters = collections.defaultdict(int)
     for _ in range(number_of_inputs):
@@ -21,8 +55,8 @@ def cli(number_of_inputs):
             if counters[key] > 1:
                 key += str(counters[key])
             data[key] = frame
-    print("Read finished")
-    process(data)
+    print("Read finished", file=sys.stderr)
+    process(data, obj)
     method = base.output_interface.METHODS[input("Output method to use: ")]
     method_args = read_args(method.input_list)
     if method == base.output_interface.BulkFolderWriter:
@@ -43,8 +77,8 @@ def main():
                         help='number of inputs', default=1)
     parser.add_argument('--cli', dest='launch', action='store_const',
                         const=cli, default=cli,
-                        help='''Launch the program in CLI mode (default will be
-                        GUI once it is implemented)''')
+                        help='''Launch the program in CLI mode (default will
+                        be GUI once it is implemented)''')
 
     parser_args = parser.parse_args()
     parser_args.launch(parser_args.keyframes)
