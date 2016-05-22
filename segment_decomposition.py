@@ -6,8 +6,8 @@ import random
 import copy
 
 
-def get_edge_map(img):
-    return cv2.Canny(img, 100, 200)  # Need to choose thresholds properly
+def get_edge_map(img, threshold1, threshold2):
+    return cv2.Canny(img, threshold1, threshold2)
 
 
 def convert_to_binary(img):
@@ -16,6 +16,8 @@ def convert_to_binary(img):
         for j in range(0, len(img[i])):
             if img[i][j].any():
                 binary_img[i][j] = 255
+            else:
+                binary_img[i][j] = 0
 
     return binary_img
 
@@ -23,9 +25,8 @@ def convert_to_binary(img):
 def get_orientation_map(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Need to pay attention to the arguments
-    xder = cv2.Sobel(gray_img, cv2.CV_32F, 1, 0)
-    yder = cv2.Sobel(gray_img, cv2.CV_32F, 0, 1)
+    xder = cv2.Sobel(gray_img, cv2.CV_64F, 1, 0)
+    yder = cv2.Sobel(gray_img, cv2.CV_64F, 0, 1)
 
     orientation_map = cv2.phase(xder, yder)
     for i, row in enumerate(orientation_map):
@@ -77,8 +78,8 @@ class PointSupport:
         res = distance * math.sin(self.angle_deviation(point))
         return res
 
-    def add_point(self, point):
-        if self.residual(point) > 2:  # Need to choose thresholds properly
+    def add_point(self, point, residual):
+        if self.residual(point) > residual:
             return False
 
         self.support += 1
@@ -154,7 +155,7 @@ class LineSegment:
 
 
 def find_support(edge_map, point_orientation_channel,
-                 quantization_channels, initial_point):
+                 quantization_channels, initial_point, residual):
     directions = [numpy.array([0, 1]), numpy.array([1, 0]),
                   numpy.array([0, -1]), numpy.array([-1, 0]),
                   numpy.array([1, 1]), numpy.array([1, -1]),
@@ -173,7 +174,7 @@ def find_support(edge_map, point_orientation_channel,
 
     while len(queue) > 0:
         point = queue.popleft()
-        if not support.add_point(point):
+        if not support.add_point(point, residual):
             continue
 
         for d in directions:
@@ -191,7 +192,8 @@ def find_support(edge_map, point_orientation_channel,
     return support
 
 
-def guess_quantized_orientation_map(edge_map, quantization_channels):
+def guess_quantized_orientation_map(edge_map,
+                                    quantization_channels, pixel_residual):
     orientation_map = numpy.ndarray(edge_map.shape, numpy.float32)
     for i in range(0, len(orientation_map)):
         for j in range(0, len(orientation_map[i])):
@@ -207,7 +209,7 @@ def guess_quantized_orientation_map(edge_map, quantization_channels):
                 newsupport = find_support(edge_map,
                                           q,
                                           quantization_channels,
-                                          numpy.array([j, i]))
+                                          numpy.array([j, i]), pixel_residual)
 
                 if newsupport.support >= support.support:
                     support = newsupport
@@ -217,7 +219,8 @@ def guess_quantized_orientation_map(edge_map, quantization_channels):
     return orientation_map
 
 
-def linearize(edge_map, orientation_map, quantization_channels):
+def linearize(edge_map, orientation_map,
+              quantization_channels, pixel_residual):
     base_points = copy.deepcopy(edge_map)
 
     points_list = []
@@ -243,7 +246,7 @@ def linearize(edge_map, orientation_map, quantization_channels):
             newsupport = find_support(edge_map,
                                       orientation_map[point[1]][point[0]],
                                       quantization_channels,
-                                      point)
+                                      point, pixel_residual)
 
             if newsupport.support >= support.support:
                 support = newsupport
