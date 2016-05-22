@@ -1,11 +1,15 @@
 import numpy.linalg as lin
 import numpy as np
+import math
 from geometry.geometry3D import ConvexPolygon
 from geometry.geometry3D import Ray
 from geometry.geometry3D import rotation_matrix
+from geometry.geometry3D import get_angle
 
 __author__ = 'Artyom_Lobanov'
 
+
+ACUTE_ANGLE_BOUND = math.pi / 6
 
 def to_cartesian_coordinates(point):
     return point[:3] / point[3]
@@ -16,6 +20,43 @@ class Object3D:
     def __init__(self, faces, points):
         self.faces = faces  # list of numpy.array which define faces
         self.point_store = PointStore(points)
+        # maps edges to faces by numbers
+        self.neighbors = []
+        self.edges = []
+        self.interesting_edges = []
+        self.normals = [None] * len(faces)
+        edges_index = dict()
+
+        def sort(pair):  # to do it faster than sorted
+            if pair[0] > pair[1]:
+                return pair[::-1]
+            return pair
+
+        def find_normal(face):
+            point_a = to_cartesian_coordinates(points[face[0]])
+            point_b = to_cartesian_coordinates(points[face[1]])
+            point_c = to_cartesian_coordinates(points[face[2]])
+            normal = np.cross(point_b - point_a, point_c - point_a)
+            return normal / lin.norm(normal)
+
+        for face_number, face in enumerate(faces):
+            for e in zip(face, np.roll(face, -1, axis=0)):
+                e = sort(e)
+                index = edges_index.get(e)
+                if not index:
+                    index = edges_index[e] = len(self.edges)
+                    self.edges.append(e)
+                    self.neighbors.append([])
+                self.neighbors[index].append(face_number)
+            self.normals[face_number] = find_normal(face)
+
+        for edge_number, lst in enumerate(self.neighbors):
+            if len(lst) != 2:
+                continue
+            normal_a, normal_b = [self.normals[i] for i in lst]
+            angle = get_angle(normal_a, normal_b)
+            if math.pi - angle < ACUTE_ANGLE_BOUND:
+                self.interesting_edges.append(edge_number)
 
     def intersect(self, ray):
         begin = ray.begin
@@ -56,7 +97,9 @@ class PointStore:
             self.array[:, i] /= self.array[:, 3]
 
     def get_point(self, i):
-        return self.array[i, :]
+        # matrix.A1 is an array with equal elements
+        return self.array[i, :].A1
 
     def to_points_array(self):
         return [self.get_point(i) for i in range(self.size)]
+

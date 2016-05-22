@@ -2,6 +2,7 @@ import numpy as np
 import numpy.linalg as lin
 from math import cos
 from math import sin
+from math import acos
 __author__ = 'Artyom_Lobanov'
 
 """
@@ -9,6 +10,9 @@ __author__ = 'Artyom_Lobanov'
     It works in 3D Cartesian coordinate system.
     It's expected that numpy.array will be used as point
 """
+
+# Magic constant. It is used to estimate the error of the calculations.
+EPS = 0.0001
 
 
 class Plane:
@@ -21,7 +25,7 @@ class Plane:
         self.d = d
 
     def contain(self, point):
-        return abs(np.dot(self.normal, point) + self.d) < 0.0001
+        return abs(np.dot(self.normal, point) + self.d) < EPS
 
     def intersect(self, ray):  # (begin + t * d) * k = 0
         """
@@ -71,7 +75,17 @@ def is_collinear(vector_a, vector_b):
     if not len_a or not len_b:
         return True
     diff = vector_a / len_a - vector_b / len_b
-    return lin.norm(diff) < 0.0001
+    return lin.norm(diff) < EPS
+
+
+def get_angle(vector_a, vector_b):
+    len_a = lin.norm(vector_a)
+    len_b = lin.norm(vector_b)
+    if not len_a or not len_b:
+        return 0
+    scalar_product = np.dot(vector_a, vector_b)
+    cos_a = scalar_product / (len_a * len_b)
+    return acos(cos_a)
 
 
 class ConvexPolygon:
