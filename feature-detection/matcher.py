@@ -54,9 +54,34 @@ def descriptor_dist(desc1, desc2):
 
 
 def build_matching(desc1, desc2, multimatches):
-    res = []
+    n = len(desc1)
+    distances = [[] for i in range(n)]
+
     for matches in multimatches:
-        res.append(matches[0])
+        for m in matches:
+            distances[m[0]].append((descriptor_dist(desc1[m[0]], desc2[m[1]])))
+    for i in range(n):
+        distances[i] = sorted(distances[i])
+
+    matching = [-1 for i in range(len(desc2))]
+
+    # Here it comes
+    for i in range(n):
+        cur_guy = i
+        while len(distances[cur_guy]) > 0:
+            cmatch = distances[cur_guy].pop()
+            if matching[cmatch[1]] == -1:
+                matching[cmatch[1]] = cur_guy
+                break
+            else:
+                if (descriptor_dist(desc1[matching[cmatch[1]]],
+                                    desc2[cmatch[1]]) >
+                        descriptor_dist(desc1[cur_guy], desc2[cmatch[1]])):
+                    cur_guy, matching[cmatch[1]] = matching[cmatch[1]], cur_guy
+    res = []
+    for i in range(len(desc2)):
+        if matching[i] != -1:
+            res.append(matching[i], i)
     return res
 
 
@@ -68,6 +93,7 @@ def match_3d_features(kp1, kp2, feature_name):
 
     desc1 = [kp[0] for kp in kp1]  # kp[0] is actually a descriptor
     desc2 = [kp[0] for kp in kp2]  # same here
+
     # PLAY WITH VALUE OF K MAYBE
     raw_matches = matcher.knnMatch(desc1, trainDescriptors=desc2, k=10)
 
