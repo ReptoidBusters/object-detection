@@ -1,9 +1,9 @@
-import cv2
-import numpy
 import collections
 import math
 import random
 import copy
+import numpy
+import cv2
 
 
 def get_edge_map(img, threshold1, threshold2):
@@ -30,7 +30,7 @@ def get_orientation_map(img):
 
     orientation_map = cv2.phase(xder, yder)
     for i, row in enumerate(orientation_map):
-        for j, angle in enumerate(row):
+        for j, _ in enumerate(row):
             orientation_map[i][j] += math.pi / 2
             orientation_map[i][j] %= math.pi
 
@@ -100,11 +100,11 @@ class LineSegment:
 
     def _get_point_relative(self, index):
         if not self.ytype:
-            y = int(round(math.tan(self.orientation) * index))
-            point = numpy.array([index, y])
+            y_coord = int(round(math.tan(self.orientation) * index))
+            point = numpy.array([index, y_coord])
         else:
-            x = int(round(1 / math.tan(self.orientation) * index))
-            point = numpy.array([x, index])
+            x_coord = int(round(1 / math.tan(self.orientation) * index))
+            point = numpy.array([x_coord, index])
 
         return point
 
@@ -177,11 +177,11 @@ def find_support(edge_map, point_orientation_channel,
         if not support.add_point(point, residual):
             continue
 
-        for d in directions:
-            next_point = point + d
+        for dircn in directions:
+            next_point = point + dircn
 
             if (not (0 <= next_point[1] < len(edge_map) and
-                0 <= next_point[0] < len(edge_map[0])) or
+                     0 <= next_point[0] < len(edge_map[0])) or
                     edge_map[next_point[1]][next_point[0]] == 0 or
                     used_point[next_point[1]][next_point[0]]):
                 continue
@@ -205,9 +205,9 @@ def guess_quantized_orientation_map(edge_map,
                                    0.0,
                                    quantization_channels)
 
-            for q in range(0, quantization_channels):
+            for channel in range(0, quantization_channels):
                 newsupport = find_support(edge_map,
-                                          q,
+                                          channel,
                                           quantization_channels,
                                           numpy.array([j, i]), pixel_residual)
 
