@@ -221,6 +221,7 @@ def guess_quantized_orientation_map(edge_map,
 
 def linearize(edge_map, orientation_map,
               quantization_channels, pixel_residual):
+    edge_map = copy.deepcopy(edge_map)
     base_points = copy.deepcopy(edge_map)
 
     pts_list = []
