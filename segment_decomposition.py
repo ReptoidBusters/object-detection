@@ -88,12 +88,12 @@ class PointSupport:
 
 
 class LineSegment:
-    def __init__(self, support, maxx, maxy):
+    def __init__(self, support, maxy, maxx):
         self.orientation = support.orientation
         self.ytype = self._determine_type()
         self.point = self._get_base_point(support)
         self.orientation_channel = support.orientation_channel
-        self._calculate_bounds(support, maxx, maxy)
+        self._calculate_bounds(support, maxy, maxx)
 
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
@@ -119,7 +119,7 @@ class LineSegment:
 
         return support.point - point
 
-    def _calculate_bounds(self, support, maxx, maxy):
+    def _calculate_bounds(self, support, maxy, maxx):
         if self.ytype:
             axis = 1
         else:
@@ -134,14 +134,14 @@ class LineSegment:
 
         while True:
             point = self._get_point(self.left_bound)
-            if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
+            if 0 <= point[1] <= maxy and 0 <= point[0] <= maxx:
                 break
 
             self.left_bound += 1
 
         while True:
             point = self._get_point(self.right_bound)
-            if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
+            if 0 <= point[1] <= maxy and 0 <= point[0] <= maxx:
                 break
 
             self.right_bound -= 1
@@ -152,6 +152,9 @@ class LineSegment:
             result.append(self._get_point(index))
 
         return result
+        
+    def get_points_amount(self):
+        return self.right_bound - self.left_bound + 1
 
 
 def find_support(edge_map, point_orientation_channel,
