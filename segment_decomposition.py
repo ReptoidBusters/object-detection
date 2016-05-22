@@ -194,7 +194,7 @@ def find_support(edge_map, point_orientation_channel,
 
 def guess_quantized_orientation_map(edge_map,
                                     quantization_channels, pixel_residual):
-    orientation_map = numpy.ndarray(edge_map.shape, numpy.float32)
+    orientation_map = numpy.ndarray(edge_map.shape, int)
     for i in range(0, len(orientation_map)):
         for j in range(0, len(orientation_map[i])):
             if edge_map[i][j] == 0:
