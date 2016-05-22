@@ -223,23 +223,23 @@ def linearize(edge_map, orientation_map,
               quantization_channels, pixel_residual):
     base_points = copy.deepcopy(edge_map)
 
-    points_list = []
+    pts_list = []
     for i in range(0, len(base_points)):
         for j in range(0, len(base_points[i])):
             if base_points[i][j] == 255:
-                points_list.append(numpy.array([j, i]))
+                pts_list.append(numpy.array([j, i]))
 
     segments_list = []
-    while len(points_list):
+    while len(pts_list):
         support = PointSupport(numpy.array([0, 0]), 0.0, quantization_channels)
         candidates = 10
 
-        while len(points_list) and candidates:
-            index = random.randint(0, len(points_list) - 1)
-            point = points_list[index]
+        while len(pts_list) and candidates:
+            index = random.randint(0, len(pts_list) - 1)
+            point = pts_list[index]
             if base_points[point[1]][point[0]] == 0:
-                points_list[index], points_list[-1] = points_list[-1], points_list[index]
-                points_list.pop()
+                pts_list[index], pts_list[-1] = pts_list[-1], pts_list[index]
+                pts_list.pop()
                 continue
 
             candidates -= 1
