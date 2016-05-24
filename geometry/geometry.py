@@ -45,7 +45,7 @@ class Object3D:
             for e in zip(face, np.roll(face, -1, axis=0)):
                 e = sort(e)
                 index = edges_index.get(e)
-                if not index:
+                if index is None:
                     index = edges_index[e] = len(self.edges)
                     self.edges.append(e)
                     self.neighbors.append([])
