@@ -60,10 +60,13 @@ class Object3D:
             if math.pi - angle < ACUTE_ANGLE_BOUND:
                 self.interesting_edges.append(edge_number)
 
-    def get_visible_edges(self, camera_position):
+    def check_visible(self, camera_position):
         matrix = rotation_matrix(-camera_position.orientation)
         ray = matrix.dot([0, 0, 1]).A1
-        is_visible = [np.dot(n, ray) < 0 for n in self.normals]
+        return [np.dot(n, ray) < 0 for n in self.normals]
+
+    def get_visible_edges(self, camera_position):
+        is_visible = self.check_visible(camera_position)
 
         def check(edge_number):
             lst = self.neighbors[edge_number]
@@ -71,6 +74,18 @@ class Object3D:
                 return False
             face_a, face_b = lst
             return is_visible[face_a] and is_visible[face_b]
+
+        return [edge for i, edge in enumerate(self.edges) if check(i)]
+
+    def get_border(self, camera_position):
+        is_visible = self.check_visible(camera_position)
+
+        def check(edge_number):
+            lst = self.neighbors[edge_number]
+            if len(lst) != 2:
+                return False
+            face_a, face_b = lst
+            return is_visible[face_a] ^ is_visible[face_b]
 
         return [edge for i, edge in enumerate(self.edges) if check(i)]
 
