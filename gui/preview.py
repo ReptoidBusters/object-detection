@@ -1,8 +1,9 @@
 import cv2
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from PySide.QtCore import QSize, QImage, QPixmap
-from PySide.QtGui import QGLWidget
+from PySide.QtCore import QSize
+from PySide.QtGui import QImage, QPixmap
+from PySide.QtOpenGL import QGLWidget
 
 
 class KeyFramePreview(QGLWidget):
@@ -44,13 +45,13 @@ class KeyFramePreview(QGLWidget):
         glEnable(GL_POLYGON_OFFSET_LINE)
         glShadeModel(GL_SMOOTH)
         glMatrixMode(GL_PROJECTION)
-        glTranslatef(*_keyframe.object_position.translation)
-        glRotatef(*_keyframe.object_position.rotation)
+        glTranslatef(*self.frame.object_position.translation)
+        glRotatef(*self.frame.object_position.rotation)
         glLoadIdentity()
         gluPerspective(45.0, 1.33, 0.1, 100.0)
         glMatrixMode(GL_MODELVIEW)
-        glTranslatef(*_keyframe.camera_position.translation)
-        glRotatef(*_keyframe.camera_position.rotation)
+        glTranslatef(*self.frame.camera_position.translation)
+        glRotatef(*self.frame.camera_position.rotation)
 
     def mousePressEvent(self, event):
         self.resize(self.normalSize if self.isFull else self.parent().size())

@@ -3,9 +3,10 @@ import argparse
 import base
 import sys
 import os
-from PySide import QtGui, Qt
+import gui
+from PySide import QtGui
+from PySide.QtCore import Qt
 from geometry import load_object
-from gui import KeyFramePreview
 
 
 def read_args(args_list):
@@ -23,7 +24,7 @@ def initialiseGuiAndProcess(data, obj):
     widget = QtGui.QWidget()
     layout = QtGui.QVBoxLayout(window)
     for label, keyframe in data.items():
-        layout.addWidget(KeyFramePreview(widget, label, keyframe, obj))
+        layout.addWidget(gui.KeyFramePreview(widget, label, keyframe, obj))
     widget.setLayout(layout)
 
     scroll = QtGui.QScrollArea()
