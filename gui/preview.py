@@ -1,37 +1,67 @@
 import cv2
-from PySide.QtCore import QSize, QImage, QPixmap, Qt
-from PySide.QtGui  import QWidget, QLabel
+from OpenGL.GL import *
+from OpenGL.GLU import *
+from PySide.QtCore import QSize, QImage, QPixmap
+from PySide.QtGui import QGLWidget
 
 
-class KeyFramePreview(QWidget):
+class KeyFramePreview(QGLWidget):
     """QtGui.QWidget for KeyFrame visualisation:
         image + matched object projection
     """
 
-    def __init__(self, parent=None, _label, _keyframe, _object):
-        super().__init__(parent)
-        self.keyframe = _keyframe
-        self.nameLabel = QLabel(_label)
-        self.nameLabel.setAlignment(Qt.AlignCenter)
-        self.imageLabel = QLabel()
-        self.imageLabel.setAlignment(Qt.AlignCenter)
+    normalSize = QSize(160, 90)
+
+    def __init__(self, _keyframe, _object, parent=None):
+        QGLWidget.__init__(self, parent)
+        self.frame = _keyframe
         self.object = _object
-        self.isFull = False
+        self.setMinimumSize(normalSize)
+
+    def paintGL(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glLoadIdentity()
+        glColor3f(1.0, 1.0, 1.0)
+        glPolygonMode(GL_FRONT, GL_FILL)
+        self.drawObject()
+        glColor3f(0.0, 0.0, 0.0)
+        glPolygonMode(GL_FRONT, GL_LINE)
+        self.drawObject(reversed=True)
+        glFlush()
+
+    def drawObject(reversed=False):
+        for face in self.object.faces:
+            glBegin(GL_POLYGON)
+            for i in (reversed(face) if reversed else face):
+                point = self.object.points[i]
+                glVertex3f(point.x, point.y, point.z)
+        glEnd()
+
+    def initializeGL(self):
+        glClearDepth(1.0)
+        glDepthFunc(GL_LESS)
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_POLYGON_OFFSET_LINE)
+        glShadeModel(GL_SMOOTH)
+        glMatrixMode(GL_PROJECTION)
+        glTranslatef(*_keyframe.object_position.translation)
+        glRotatef(*_keyframe.object_position.rotation)
+        glLoadIdentity()
+        gluPerspective(45.0, 1.33, 0.1, 100.0)
+        glMatrixMode(GL_MODELVIEW)
+        glTranslatef(*_keyframe.camera_position.translation)
+        glRotatef(*_keyframe.camera_position.rotation)
 
     def mousePressEvent(self, event):
-        self.resize(normalSize if self.isFull else self.parent().size())
+        self.resize(self.normalSize if self.isFull else self.parent().size())
         self.isFull ^= 1
 
-    def resizeEvent(self, event):
-        size = self.size()
-        size.h -= 10
-        self.imageLabel.resize(size)
-        self.nameLabel.setGeometry(0, size.h, size.w, 10)
-        image = cv2.resize(self.keyframe.image, size, 
+    def resizeGL(w, h):
+        image = cv2.resize(self.keyframe.image, (w, h),
                            interpolation=cv2.INTER_CUBIC)
         height, width, channel = image.shape
         bytesPerLine = 3 * width
-        pixmap = QPixmap(QImage(image.data, width, height, bytesPerLine, 
-                         QImage.Format_RGB888))
+        pixmap = QPixmap(QImage(image.data, width, height, bytesPerLine,
+                                QImage.Format_RGB888))
         self.imageLabel.setPixmap(pixmap)
-        raise NotImplemented("Object rendering")
+        self.nameLabel.setGeometry(0, size.h, size.w, 10)
