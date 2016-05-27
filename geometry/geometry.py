@@ -1,11 +1,10 @@
+import math
 import numpy.linalg as lin
 import numpy as np
-import math
-from prospector.pathutils import is_virtualenv
-from geometry.geometry3D import ConvexPolygon
-from geometry.geometry3D import Ray
-from geometry.geometry3D import rotation_matrix
-from geometry.geometry3D import get_angle
+from geometry.geometry3d import ConvexPolygon
+from geometry.geometry3d import Ray
+from geometry.geometry3d import rotation_matrix
+from geometry.geometry3d import get_angle
 
 __author__ = 'Artyom_Lobanov'
 
@@ -42,12 +41,12 @@ class Object3D:
             return normal / lin.norm(normal)
 
         for face_number, face in enumerate(faces):
-            for e in zip(face, np.roll(face, -1, axis=0)):
-                e = sort(e)
-                index = edges_index.get(e)
+            for edge in zip(face, np.roll(face, -1, axis=0)):
+                edge = sort(edge)
+                index = edges_index.get(edge)
                 if index is None:
-                    index = edges_index[e] = len(self.edges)
-                    self.edges.append(e)
+                    index = edges_index[edge] = len(self.edges)
+                    self.edges.append(edge)
                     self.neighbors.append([])
                 self.neighbors[index].append(face_number)
             self.normals[face_number] = find_normal(face)
@@ -61,11 +60,19 @@ class Object3D:
                 self.interesting_edges.append(edge_number)
 
     def check_visible(self, camera_position):
+        """
+        return array of bools
+        If nth-element in that array is True,
+        edge number n is visible
+        """
         matrix = rotation_matrix(-camera_position.orientation)
         ray = matrix.dot([0, 0, 1]).A1
         return [np.dot(n, ray) < 0 for n in self.normals]
 
     def get_visible_edges(self, camera_position):
+        """
+        return array of visible edges
+        """
         is_visible = self.check_visible(camera_position)
 
         def check(edge_number):
@@ -75,7 +82,8 @@ class Object3D:
             face_a, face_b = lst
             return is_visible[face_a] and is_visible[face_b]
 
-        return [edge for i, edge in enumerate(self.edges) if check(i)]
+        res = [edge for i, edge in enumerate(self.edges) if check(i)]
+        return [self.point_store.get_points(edge) for edge in res]
 
     def get_border(self, camera_position):
         is_visible = self.check_visible(camera_position)
@@ -87,7 +95,8 @@ class Object3D:
             face_a, face_b = lst
             return is_visible[face_a] ^ is_visible[face_b]
 
-        return [edge for i, edge in enumerate(self.edges) if check(i)]
+        res = [edge for i, edge in enumerate(self.edges) if check(i)]
+        return [self.point_store.get_points(edge) for edge in res]
 
     def intersect(self, ray):
         begin = ray.begin
@@ -105,8 +114,8 @@ class Object3D:
                 res = point
         return res
 
-    def get_original(self, camera_position, camera_parameters, x, y):
-        point = np.array([x - camera_parameters[0, 2], y - camera_parameters[1, 2], 1])
+    def get_original(self, camera_position, camera_params, x, y):
+        point = np.array([x - camera_params[0, 2], y - camera_params[1, 2], 1])
         point = rotation_matrix(-camera_position.orientation).dot(point)
         point = point + camera_position.translation
         ray = Ray(camera_position.translation, point)
@@ -115,22 +124,18 @@ class Object3D:
 
 class PointStore:
     def __init__(self, points):
-        self.array = np.empty((len(points), 4), dtype=np.double)
+        self.array = np.empty((len(points), 4), dtype=np.float_)
         self.size = len(points)
-        for i in range(len(points)):
-            self.array[i, :] = points[i]
+        for i, point in enumerate(points):
+            self.array[i, :] = point
 
     def transform(self, transformation):
-        self.array = self.array.dot(transformation.transpose())
+        # matrix.A is an ndarray with equal elements
+        self.array = self.array.dot(transformation.transpose()).A
 
-    def normalize(self):
-        for i in range(4):
-            self.array[:, i] /= self.array[:, 3]
-
-    def get_point(self, i):
-        # matrix.A1 is an array with equal elements
-        return self.array[i, :].A1
-
-    def to_points_array(self):
-        return [self.get_point(i) for i in range(self.size)]
-
+    def get_points(self, i):
+        """
+        if i is number, return point
+        if i is list or tuple, return list of points
+        """
+        return self.array[i, :]

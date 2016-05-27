@@ -1,8 +1,8 @@
-import numpy as np
-import numpy.linalg as lin
 from math import cos
 from math import sin
 from math import acos
+import numpy as np
+import numpy.linalg as lin
 __author__ = 'Artyom_Lobanov'
 
 """
@@ -20,22 +20,22 @@ class Plane:
     """
         Define plane by normal and distance to origin.
     """
-    def __init__(self, normal, d):
+    def __init__(self, normal, distance):
         self.normal = normal
-        self.d = d
+        self.distance = distance
 
     def contain(self, point):
-        return abs(np.dot(self.normal, point) + self.d) < EPS
+        return abs(np.dot(self.normal, point) + self.distance) < EPS
 
     def intersect(self, ray):  # (begin + t * d) * k = 0
         """
         Return common point of this plane and the ray.
         If the ray lies in plane or if they are parallel, method return None.
         """
-        tmp = self.normal.dot(ray.d)
+        tmp = self.normal.dot(ray.vector)
         if not tmp:
             return None
-        distance = -(self.normal.dot(ray.begin) + self.d) / tmp
+        distance = -(self.normal.dot(ray.begin) + self.distance) / tmp
         return ray.get_point(distance)
 
     @staticmethod
@@ -49,24 +49,24 @@ class Plane:
         if not length:  # normal = 0
             raise RuntimeError("Can't create plane: points must be different")
         normal /= length  # now normal is normalized
-        d = - np.dot(normal, point1)
-        return Plane(normal, d)
+        distance = - np.dot(normal, point1)
+        return Plane(normal, distance)
 
     def __repr__(self):
-        normal_str = "(" + ", ".join([str(x) for x in self.normal]) + ")"
-        return "Plane[Normal = " + normal_str + "; D = " + str(self.d) + "]"
+        normal = "(" + ", ".join([str(x) for x in self.normal]) + ")"
+        return "Plane[Normal = " + normal + "; D = " + str(self.distance) + "]"
 
 
 class Ray:
 
     def __init__(self, begin, another):
         self.begin = np.copy(begin)
-        self.d = another - begin
+        self.vector = another - begin
 
     def get_point(self, distance):
         if distance < 0:
             return None
-        return self.begin + self.d * distance
+        return self.begin + self.vector * distance
 
 
 def is_collinear(vector_a, vector_b):
@@ -93,7 +93,6 @@ class ConvexPolygon:
     def __init__(self, points):
         self.points = points
         self.plane = Plane.create_plane(points[0], points[1], points[2])
-        print(points)
 
     def intersect(self, ray):
         """
@@ -114,8 +113,8 @@ class ConvexPolygon:
         """
         points = self.points
         orientation = np.cross(points[2] - points[0], points[1] - points[0])
-        for p1, p2 in zip(points, np.roll(points, -1, axis=0)):
-            res = np.cross(point - p1, p2 - p1)
+        for point1, point2 in zip(points, np.roll(points, -1, axis=0)):
+            res = np.cross(point - point1, point2 - point1)
             if not is_collinear(res, orientation):
                 return False
         return True
@@ -124,13 +123,13 @@ class ConvexPolygon:
 def rotation_matrix_x(alpha):
     return np.matrix([[1, 0, 0],
                       [0, cos(alpha), -sin(alpha)],
-                      [0, sin(alpha),  cos(alpha)]])
+                      [0, sin(alpha), cos(alpha)]])
 
 
 def rotation_matrix_y(alpha):
     return np.matrix([[cos(alpha), 0, sin(alpha)],
                       [0, 1, 0],
-                      [-sin(alpha), 0,  cos(alpha)]])
+                      [-sin(alpha), 0, cos(alpha)]])
 
 
 def rotation_matrix_z(alpha):
