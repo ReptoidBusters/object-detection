@@ -72,6 +72,20 @@ class Matcher:
                     index += 1
                 
                 self.distance[y][x] = x**2 + stack[index].eval(x)
+    
+    def _calculate_partial_sums(self):
+        shape = self.img_edge_map.shape
+        self.partial_sums_shift = max(shape[0], shape[1])
+        partial_sums_range = 3 * self.partial_sums_shift
+        self.partial_sums = numpy.ndarray((self.quantization_channels,
+                                           partial_sums_range,
+                                           self.partial_sums_shift), int)
+        self.partial_sums.fill(0)
+        
+        for channel in range(0, self.quantization_channels):
+            for ind_coord in range(0, partial_sums_range):
+                coord = ind_coord - self.partial_sums_shift
+                # ...
         
     def set_image(self, img):
         self.img_edge_map = get_edge_map(img,
@@ -87,6 +101,7 @@ class Matcher:
                                            self.quantization_channels,
                                            self.img_pixel_residual)
         self._calculate_distances()
+        self._calculate_partial_sums()
 
     def set_pattern(self, pattern):
         self.pattern_edge_map = convert_to_binary(pattern)
