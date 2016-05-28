@@ -92,6 +92,9 @@ class LineSegment:
         self = LineSegment()
         self.orientation = support.orientation
         self.ytype = self._determine_type()
+        
+        self._calculate_coefficients()
+        
         self.point = self._get_base_point(support.point)
         self.orientation_channel = support.orientation_channel
         self._calculate_bounds(support, maxy, maxx)
@@ -104,6 +107,8 @@ class LineSegment:
         self.orientation = angle_from_channel(orientation_channel,
                                               quantization_channels)
         self.ytype = self._determine_type()
+        self._calculate_coefficients()
+        
         if self.ytype:
             self.point = numpy.array([coordinate, 0])
         else:
@@ -117,6 +122,7 @@ class LineSegment:
         self = LineSegment()
         self.orientation = line_segment.orientation
         self.ytype = line_segment.ytype
+        self._calculate_coefficients()
         self.point = self._get_base_point(line_segment.point + shift)
         self.orientation_channel = line_segment.orientation_channel
         
@@ -130,15 +136,21 @@ class LineSegment:
             
         return self
 
+    def _calculate_coefficients(self):
+        if not self.ytype:
+            self.y_angle_coefficient = math.tan(self.orientation)
+        else:
+            self.x_angle_coefficient = 1 / math.tan(self.orientation)
+
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
 
     def _get_point_relative(self, index):
         if not self.ytype:
-            y_coord = int(round(math.tan(self.orientation) * index))
+            y_coord = int(round(self.y_angle_coefficient * index))
             point = numpy.array([index, y_coord])
         else:
-            x_coord = int(round(1 / math.tan(self.orientation) * index))
+            x_coord = int(round(self.x_angle_coefficient * index))
             point = numpy.array([x_coord, index])
 
         return point
