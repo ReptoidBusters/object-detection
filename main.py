@@ -3,7 +3,7 @@ import argparse
 import base
 import sys
 import os
-import gui
+from gui.preview import KeyFramePreview
 from PySide import QtGui
 from PySide.QtCore import Qt
 from geometry import load_object
@@ -21,10 +21,10 @@ def initialiseGuiAndProcess(data, obj):
     window.setFixedSize(1248, 702)
     window.setFocus()
 
-    widget = QtGui.QWidget()
-    layout = QtGui.QVBoxLayout(window)
+    widget = QtGui.QWidget(window)
+    layout = QtGui.QVBoxLayout(widget)
     for label, keyframe in data.items():
-        layout.addWidget(gui.KeyFramePreview(widget, label, keyframe, obj))
+        layout.addWidget(KeyFramePreview(keyframe, obj, widget))
     widget.setLayout(layout)
 
     scroll = QtGui.QScrollArea()
@@ -33,12 +33,28 @@ def initialiseGuiAndProcess(data, obj):
     scroll.setWidgetResizable(False)
     scroll.setWidget(widget)
 
-    vLayout = QtGui.QVBoxLayout(window)
-    vLayout.addWidget(scroll)
-    window.setLayout(vLayout)
+    window.setCentralWidget(widget)
 
     window.show()
     app.exec_()
+
+
+def demo(number_of_inputs):
+    name = "teapot"
+    object_address = "samples/{}/mesh.obj".format(name)
+    obj = load_object(object_address)
+    data = {}
+    counters = collections.defaultdict(int)
+    method = base.input_interface.METHODS["two files"]
+    for key, frame in method(name,
+                             "samples/{}/image.png".format(name),
+                             "samples/{0}/{0}".format(name)).load().items():
+        counters[key] += 1
+        if counters[key] > 1:
+            key += str(counters[key])
+        data[key] = frame
+    print("Read finished", file=sys.stderr)
+    initialiseGuiAndProcess(data, obj)
 
 
 def cli(number_of_inputs):
@@ -73,14 +89,16 @@ def cli(number_of_inputs):
                                                              use: """)]
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Process some keyframes.')
-    parser.add_argument('keyframes', metavar='N', type=int, nargs='?',
-                        help='number of inputs', default=1)
-    parser.add_argument('--cli', dest='launch', action='store_const',
-                        const=cli, default=cli,
-                        help='''Launch the program in CLI mode (default will
-                        be GUI once it is implemented)''')
+parser = argparse.ArgumentParser(description='Process some keyframes.')
+parser.add_argument('keyframes', metavar='N', type=int, nargs='?',
+                    help='number of inputs', default=1)
+parser.add_argument('--cli', dest='launch', action='store_const',
+                    const=cli, default=cli,
+                    help='''Launch the program in CLI mode (default will
+                    be GUI once it is implemented)''')
+parser.add_argument('--demo', dest='launch', action='store_const',
+                    const=demo,
+                    help='''Launch the program in demo mode''')
 
-    parser_args = parser.parse_args()
-    parser_args.launch(parser_args.keyframes)
+parser_args = parser.parse_args()
+parser_args.launch(parser_args.keyframes)
