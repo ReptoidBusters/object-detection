@@ -118,7 +118,7 @@ class LineSegment:
         self.orientation = line_segment.orientation
         self.ytype = line_segment.ytype
         self.point = self._get_base_point(line_segment.point + shift)
-        self.orientation_channel = support.orientation_channel
+        self.orientation_channel = line_segment.orientation_channel
         
         if self.ytype:
             axis = 1
