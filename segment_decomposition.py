@@ -95,6 +95,17 @@ class LineSegment:
         self.orientation_channel = support.orientation_channel
         self._calculate_bounds(support, maxy, maxx)
 
+    def __init__(self, orientation_channel, quantization_channels, coordinate):
+        self.orientation = angle_from_channel(orientation_channel,
+                                              quantization_channels)
+        self.ytype = self._determine_type()
+        if self.ytype:
+            self.point = numpy.array([coordinate, 0])
+        else:
+            self.point = numpy.array([0, coordinate])
+            
+        self.orientation_channel = orientation_channel
+
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
 
