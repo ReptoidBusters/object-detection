@@ -72,21 +72,6 @@ class Matcher:
                     index += 1
                 
                 self.distance[y][x] = x**2 + stack[index].eval(x)
-    
-    def _calculate_distances_slow(self):
-        shape = self.img_edge_map.shape
-        ydst = self._calculate_ydistance()
-        
-        print("Calculating distances:", file = sys.stderr)
-        cnt = 0
-        self.crt_distance = copy.deepcopy(ydst)
-        for y in range(0, shape[0]):
-            for x in range(0, shape[1]):
-                for xx in range(0, shape[1]):
-                    self.crt_distance[y][x] = min(self.crt_distance[y][x], ydst[y][xx] + (x - xx)**2)
-                
-                cnt += 1    
-                print(cnt, " of ", shape[0] * shape[1], " pixels are processed", file = sys.stderr)
         
     def set_image(self, img):
         self.img_edge_map = get_edge_map(img,
