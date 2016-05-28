@@ -88,14 +88,19 @@ class PointSupport:
 
 
 class LineSegment:
-    def __init__(self, support, maxy, maxx):
+    def from_support(support, maxy, maxx):
+        self = LineSegment()
         self.orientation = support.orientation
         self.ytype = self._determine_type()
         self.point = self._get_base_point(support)
         self.orientation_channel = support.orientation_channel
         self._calculate_bounds(support, maxy, maxx)
+        
+        return self
 
-    def __init__(self, orientation_channel, quantization_channels, coordinate):
+    def from_orientation(orientation_channel, quantization_channels,
+                                                                coordinate):
+        self = LineSegment()
         self.orientation = angle_from_channel(orientation_channel,
                                               quantization_channels)
         self.ytype = self._determine_type()
@@ -105,6 +110,8 @@ class LineSegment:
             self.point = numpy.array([0, coordinate])
             
         self.orientation_channel = orientation_channel
+        
+        return self
 
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
@@ -119,7 +126,7 @@ class LineSegment:
 
         return point
 
-    def _get_point(self, index):
+    def get_point(self, index):
         return self.point + self._get_point_relative(index)
 
     def _get_base_point(self, support):
@@ -144,14 +151,14 @@ class LineSegment:
             self.right_bound = max(self.right_bound, candidate)
 
         while True:
-            point = self._get_point(self.left_bound)
+            point = self.get_point(self.left_bound)
             if 0 <= point[1] <= maxy and 0 <= point[0] <= maxx:
                 break
 
             self.left_bound += 1
 
         while True:
-            point = self._get_point(self.right_bound)
+            point = self.get_point(self.right_bound)
             if 0 <= point[1] <= maxy and 0 <= point[0] <= maxx:
                 break
 
@@ -160,7 +167,7 @@ class LineSegment:
     def get_points_list(self):
         result = []
         for index in range(self.left_bound, self.right_bound + 1):
-            result.append(self._get_point(index))
+            result.append(self.get_point(index))
 
         return result
         
@@ -270,7 +277,7 @@ def linearize(edge_map, orientation_map,
             base_points[support.point[1]][support.point[0]] = 0
             continue
 
-        segments_list.append(LineSegment(support,
+        segments_list.append(LineSegment.from_support(support,
                                          len(base_points) - 1,
                                          len(base_points[0]) - 1))
 
