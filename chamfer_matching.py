@@ -1,6 +1,25 @@
 import sys
 from segment_decomposition import*
 
+class LinearFunction:
+    def __init__(self, coefficient, constant):
+        self.coefficient = coefficient
+        self.constant = constant
+    
+    def eval(self, point):
+        return self.coefficient * point + self.constant
+        
+    def is_good_replacement(self, lf1, lf2):
+        return (self.constant - lf1.constant) *
+               (lf1.coefficient - lf2.coefficient) <=
+               (lf2.constant - lf1.constant) *
+               (lf1.coefficient - self.coefficient)
+               
+    def is_bad_function(self, next_lf, point):
+        return point * (self.coefficient - next_lf.coefficient) >
+                                            next_lf.constant - self.constant
+
+
 class Matcher:
     def __init__(self):
         self.hysteresis_threshold1 = 100
@@ -11,7 +30,7 @@ class Matcher:
     
     def _calculate_ydistance(self):
         shape = self.img_edge_map.shape
-        max_distance = max(shape[0], shape[1])
+        max_distance = 2 * max(shape[0], shape[1])
         
         ydst = numpy.ndarray(shape, numpy.int64)
         ydst.fill(max_distance)
@@ -34,7 +53,8 @@ class Matcher:
         return ydst
     
     def _calculate_distances(self):
-        pass
+        shape = self.img_edge_map.shape
+        ydst = self._calculate_ydistance()
     
     def _calculate_distances_slow(self):
         shape = self.img_edge_map.shape
