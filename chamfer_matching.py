@@ -154,12 +154,21 @@ class Matcher:
             for x in range(0, diff_shape[1]):
                 current_cost = 0
                 for segment in self.pattern_segments_list:
-                    for point in segment.get_points_list():
-                        pos = point + numpy.array([x, y])
-                        current_cost += self.distance[pos[1]][pos[0]]
+                    shifted_segment = LineSegment.shifted(segment,
+                                                          numpy.array([x, y]))
+                    ind1 = shifted_segment.orientation_channel
+                    ind2 = shifted_segment.point[1] + shifted_segment.point[0]
+                    ind2 += self.partial_sums_shift
+                    array = self.partial_sums[ind1][ind2]
+                    
+                    segment_cost = array[shifted_segment.right_bound]
+                    if shifted_segment.left_bound > 0:
+                        segment_cost -= array[shifted_segment.left_bound - 1]
+                    
+                    current_cost += segment_cost
                 
                 if current_cost < cost:
                     cost = current_cost
                     occurrence = numpy.array([x, y])
-                
+        
         return occurrence
