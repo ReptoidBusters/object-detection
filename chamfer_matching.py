@@ -20,6 +20,10 @@ class LinearFunction:
         return v1 > v2
 
 
+def is_in_shape(shape, point):
+    return 0 <= point[1] < shape[0] and 0 <= point[0] < shape[1]
+
+
 class Matcher:
     def __init__(self):
         self.hysteresis_threshold1 = 100
@@ -75,7 +79,8 @@ class Matcher:
     
     def _calculate_partial_sums(self):
         shape = self.img_edge_map.shape
-        self.partial_sums_shift = max(shape[0], shape[1])
+        max_length = max(shape[0], shape[1])
+        self.partial_sums_shift = max_length
         partial_sums_range = 3 * self.partial_sums_shift
         self.partial_sums = numpy.ndarray((self.quantization_channels,
                                            partial_sums_range,
@@ -85,7 +90,20 @@ class Matcher:
         for channel in range(0, self.quantization_channels):
             for ind_coord in range(0, partial_sums_range):
                 coord = ind_coord - self.partial_sums_shift
-                # ...
+                line = LineSegment.from_orientation(channel,
+                                                    self.quantization_channels,
+                                                    coord)
+                
+                array = self.partial_sums[channel][ind_coord]
+                for index in range(0, max_length):
+                    if index > 0:
+                        array[index] = array[index - 1]
+                    else:
+                        array[index] = 0
+                        
+                    point = line.get_point(index)
+                    if is_in_shape(shape, point):
+                        array[index] += self.distance[point[1]][point[0]]
         
     def set_image(self, img):
         self.img_edge_map = get_edge_map(img,
@@ -100,7 +118,10 @@ class Matcher:
                                            self.img_orientation_map,
                                            self.quantization_channels,
                                            self.img_pixel_residual)
+        print("Calculating distances")
         self._calculate_distances()
+        
+        print("Calculating partial sums")
         self._calculate_partial_sums()
 
     def set_pattern(self, pattern):
