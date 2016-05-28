@@ -92,7 +92,7 @@ class LineSegment:
         self = LineSegment()
         self.orientation = support.orientation
         self.ytype = self._determine_type()
-        self.point = self._get_base_point(support)
+        self.point = self._get_base_point(support.point)
         self.orientation_channel = support.orientation_channel
         self._calculate_bounds(support, maxy, maxx)
         
@@ -113,6 +113,23 @@ class LineSegment:
         
         return self
 
+    def shifted(line_segment, shift):
+        self = LineSegment()
+        self.orientation = line_segment.orientation
+        self.ytype = line_segment.ytype
+        self.point = self._get_base_point(line_segment.point + shift)
+        self.orientation_channel = support.orientation_channel
+        
+        if self.ytype:
+            axis = 1
+        else:
+            axis = 0
+        
+        self.left_bound = line_segment.left_bound + shift[axis]
+        self.right_bound = line_segment.right_bound + shift[axis]
+            
+        return self
+
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
 
@@ -129,13 +146,13 @@ class LineSegment:
     def get_point(self, index):
         return self.point + self._get_point_relative(index)
 
-    def _get_base_point(self, support):
+    def _get_base_point(self, given_point):
         if not self.ytype:
-            point = self._get_point_relative(support.point[0])
+            point = self._get_point_relative(given_point[0])
         else:
-            point = self._get_point_relative(support.point[1])
+            point = self._get_point_relative(given_point[1])
 
-        return support.point - point
+        return given_point - point
 
     def _calculate_bounds(self, support, maxy, maxx):
         if self.ytype:
