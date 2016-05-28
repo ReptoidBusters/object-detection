@@ -10,14 +10,14 @@ class LinearFunction:
         return self.coefficient * point + self.constant
         
     def is_good_replacement(self, lf1, lf2):
-        return (self.constant - lf1.constant) *
-               (lf1.coefficient - lf2.coefficient) <=
-               (lf2.constant - lf1.constant) *
-               (lf1.coefficient - self.coefficient)
+        v1 = (self.constant - lf1.constant) * (lf1.coefficient - lf2.coefficient)
+        v2 = (lf2.constant - lf1.constant) * (lf1.coefficient - self.coefficient)
+        return v1 <= v2
                
     def is_bad_function(self, next_lf, point):
-        return point * (self.coefficient - next_lf.coefficient) >
-                                            next_lf.constant - self.constant
+        v1 = point * (self.coefficient - next_lf.coefficient)
+        v2 = next_lf.constant - self.constant
+        return v1 > v2
 
 
 class Matcher:
@@ -56,6 +56,23 @@ class Matcher:
         shape = self.img_edge_map.shape
         ydst = self._calculate_ydistance()
     
+        self.distance = numpy.ndarray(shape, numpy.int64)
+        for y in range(0, shape[0]):
+            stack = []
+            for x in range(0, shape[1]):
+                lf = LinearFunction(-2 * x, x**2 + ydst[y][x])
+                while len(stack) > 1 and lf.is_good_replacement(stack[-2], stack[-1]):
+                    stack.pop()
+                    
+                stack.append(lf)
+            
+            index = 0    
+            for x in range(0, shape[1]):
+                while index + 1 != len(stack) and stack[index].is_bad_function(stack[index + 1], x):
+                    index += 1
+                
+                self.distance[y][x] = x**2 + stack[index].eval(x)
+    
     def _calculate_distances_slow(self):
         shape = self.img_edge_map.shape
         ydst = self._calculate_ydistance()
@@ -85,13 +102,6 @@ class Matcher:
                                            self.quantization_channels,
                                            self.img_pixel_residual)
         self._calculate_distances()
-        self._calculate_distances_slow()
-        
-        #shape = self.img_edge_map.shape
-        #for y in range(0, shape[0]):
-        #    for x in range(0, shape[1]):
-        #        if self.distance[y][x] != self.crt_distance[y][x]:
-        #            print("distance for (", x, ", ", y, ") is wrong")
 
     def set_pattern(self, pattern):
         self.pattern_edge_map = convert_to_binary(pattern)
@@ -125,7 +135,7 @@ class Matcher:
                 for segment in self.pattern_segments_list:
                     for point in segment.get_points_list():
                         pos = point + numpy.array([x, y])
-                        current_cost += self.crt_distance[pos[1]][pos[0]]
+                        current_cost += self.distance[pos[1]][pos[0]]
                 
                 if current_cost < cost:
                     cost = current_cost
