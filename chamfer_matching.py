@@ -9,26 +9,47 @@ class Matcher:
         self.img_pixel_residual = 1.0
         self.pattern_pixel_residual = 1.0
     
-    def calculate_distances(self):
+    def _calculate_ydistance(self):
         shape = self.img_edge_map.shape
-        max_distance = numpy.dot(shape, shape)
+        max_distance = max(shape[0], shape[1])
         
-        self.distance = numpy.ndarray(shape, numpy.int64)
-        self.distance.fill(max_distance)
+        ydst = numpy.ndarray(shape, numpy.int64)
+        ydst.fill(max_distance)
+        for segment in self.img_segments_list:
+            for point in segment.get_points_list():
+                ydst[point[1]][point[0]] = 0
+                
+        for y in range(1, shape[0]):
+            for x in range(0, shape[1]):
+                ydst[y][x] = min(ydst[y][x], ydst[y - 1][x] + 1)
+                
+        for y in range(shape[0] - 2, -1, -1):
+            for x in range(0, shape[1]):
+                ydst[y][x] = min(ydst[y][x], ydst[y + 1][x] + 1)
+                
+        for y in range(0, shape[0]):
+            for x in range(0, shape[1]):
+                ydst[y][x] = (ydst[y][x])**2
+                
+        return ydst
+    
+    def _calculate_distances(self):
+        pass
+    
+    def _calculate_distances_slow(self):
+        shape = self.img_edge_map.shape
+        ydst = self._calculate_ydistance()
         
         print("Calculating distances:", file = sys.stderr)
         cnt = 0
-        for segment in self.img_segments_list:
-            for point in segment.get_points_list():
-                for y in range(0, shape[0]):
-                    for x in range(0, shape[1]):
-                        diff = point - numpy.array([x, y])
-                        dst = numpy.dot(diff, diff)
-                        self.distance[y][x] = min(self.distance[y][x], dst)
-            cnt += 1
-            print(cnt, " of ", len(self.img_segments_list), " segments are processed", file = sys.stderr)
-        
-        print("Distances are calculated", file = sys.stderr)
+        self.crt_distance = copy.deepcopy(ydst)
+        for y in range(0, shape[0]):
+            for x in range(0, shape[1]):
+                for xx in range(0, shape[1]):
+                    self.crt_distance[y][x] = min(self.crt_distance[y][x], ydst[y][xx] + (x - xx)**2)
+                
+                cnt += 1    
+                print(cnt, " of ", shape[0] * shape[1], " pixels are processed", file = sys.stderr)
         
     def set_image(self, img):
         self.img_edge_map = get_edge_map(img,
@@ -43,8 +64,15 @@ class Matcher:
                                            self.img_orientation_map,
                                            self.quantization_channels,
                                            self.img_pixel_residual)
-        self.calculate_distances()
-                                           
+        self._calculate_distances()
+        self._calculate_distances_slow()
+        
+        #shape = self.img_edge_map.shape
+        #for y in range(0, shape[0]):
+        #    for x in range(0, shape[1]):
+        #        if self.distance[y][x] != self.crt_distance[y][x]:
+        #            print("distance for (", x, ", ", y, ") is wrong")
+
     def set_pattern(self, pattern):
         self.pattern_edge_map = convert_to_binary(pattern)
         self.pattern_orientation_map = guess_quantized_orientation_map(
@@ -77,7 +105,7 @@ class Matcher:
                 for segment in self.pattern_segments_list:
                     for point in segment.get_points_list():
                         pos = point + numpy.array([x, y])
-                        current_cost += self.distance[pos[1]][pos[0]]
+                        current_cost += self.crt_distance[pos[1]][pos[0]]
                 
                 if current_cost < cost:
                     cost = current_cost
