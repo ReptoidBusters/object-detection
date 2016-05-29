@@ -3,9 +3,6 @@ class Position:
         self.translation = translation
         self.orientation = orientation
 
-    def combine(self):
-        raise NotImplementedError
-
 
 class KeyFrame:
     def __init__(self, image, camera_position,

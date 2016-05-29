@@ -1,7 +1,7 @@
 import cv2
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from PySide.QtCore import QSize, QRectF
+from PySide.QtCore import QRectF, Qt, QSize
 from PySide.QtGui import QImage
 from PySide.QtOpenGL import QGLWidget
 
@@ -12,12 +12,12 @@ class KeyFramePreview(QGLWidget):
     """
 
     normalSize = QSize(160, 90) * 2
-    curSize = normalSize
 
     def __init__(self, _keyframe, _object, parent=None):
         QGLWidget.__init__(self, parent)
         self.frame = _keyframe
         self.object = _object
+        self.curSize = self.normalSize
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -36,33 +36,34 @@ class KeyFramePreview(QGLWidget):
         glLoadIdentity()
         glPolygonMode(GL_FRONT, GL_FILL)
 
-        glColor3f(1.0, 1.0, 1.0)
+        self.qglColor(Qt.white)
         self.drawTexture(QRectF(-1, -1, 2, 2), self.texture)
+
+        glDisable(GL_TEXTURE_2D)
 
         glMatrixMode(GL_MODELVIEW)
         glPopMatrix()
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()
 
-        glDisable(GL_TEXTURE_2D)
+        glMatrixMode(GL_MODELVIEW)
 
         glEnable(GL_DEPTH_TEST)
-        glMatrixMode(GL_MODELVIEW)
-        glColor3f(1.0, 1.0, 1.0)
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE)
         glPolygonMode(GL_FRONT, GL_FILL)
+        self.qglColor(Qt.white)
         self.drawObject()
-        glColor3f(0.0, 0.0, 0.0)
         glPolygonMode(GL_FRONT, GL_LINE)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)
+        glDepthMask(GL_FALSE)
+        self.qglColor(Qt.black)
         self.drawObject()
+        glDepthMask(GL_TRUE)
+
         glFlush()
 
     def drawObject(self):
-        for face in self.object.faces:
-            glBegin(GL_POLYGON)
-            for i in face:
-                point = self.object.points[i]
-                glVertex3f(point.x, point.y, point.z)
-            glEnd()
+        glCallList(self.objectDrawer)
 
     def rotate(self, rotation):
         for vector, angle in zip(((0, 0, 1), (0, 1, 0), (1, 0, 0)),
@@ -72,15 +73,25 @@ class KeyFramePreview(QGLWidget):
     def initializeGL(self):
         glClearDepth(1.0)
         glDepthFunc(GL_LESS)
-        glEnable(GL_POLYGON_OFFSET_FILL)
-        glPolygonOffset(1, 1)
         glShadeModel(GL_SMOOTH)
         glEnable(GL_CULL_FACE)
+        glEnable(GL_POLYGON_OFFSET_FILL)
+        glPolygonOffset(1, 1)
 
         image = cv2.flip(self.frame.image, 0)
         height, width, channel = image.shape
         image = QImage(image.data, width, height, QImage.Format_RGB888)
         self.texture = self.bindTexture(image.rgbSwapped())
+
+        self.objectDrawer = glGenLists(1)
+        glNewList(self.objectDrawer, GL_COMPILE)
+        for face in self.object.faces:
+            glBegin(GL_POLYGON)
+            for i in face:
+                point = self.object.points[i]
+                glVertex3f(point.x, point.y, point.z)
+            glEnd()
+        glEndList()
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -103,7 +114,7 @@ class KeyFramePreview(QGLWidget):
                else event.size())
         w, h = tmp.width(), tmp.height()
         print(w, h)
-        self.setGeometry(10, 10, w, h)
+        self.resize(w, h)
         self.resizeGL(w, h)
 
     def resizeGL(self, w, h):

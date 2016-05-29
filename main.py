@@ -13,6 +13,12 @@ def read_args(args_list):
     return (input("Enter {}: ".format(arg)) for arg in args_list)
 
 
+def addNewKeyframe(layout, widget, keyframe, obj):
+    subwidget = KeyFramePreview(keyframe, obj, widget)
+    subwidget.resize(KeyFramePreview.normalSize)
+    layout.addWidget(subwidget)
+
+
 def initialiseGuiAndProcess(data, obj):
     app = QtGui.QApplication(sys.argv)
 
@@ -21,38 +27,49 @@ def initialiseGuiAndProcess(data, obj):
     window.setFixedSize(1248, 702)
     window.setFocus()
 
-    widget = QtGui.QWidget(window)
-    layout = QtGui.QVBoxLayout(widget)
+    widget = QtGui.QWidget()
+
+    layout = QtGui.QHBoxLayout(widget)
     for label, keyframe in data.items():
-        layout.addWidget(KeyFramePreview(keyframe, obj, widget))
+        addNewKeyframe(layout, widget, keyframe, obj)
     widget.setLayout(layout)
 
-    scroll = QtGui.QScrollArea()
-    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    scroll = QtGui.QScrollArea(window)
+    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
     scroll.setWidgetResizable(False)
+    scroll.setAlignment(Qt.AlignRight)
+    scroll.setVisible(True)
     scroll.setWidget(widget)
+    scroll.setWidgetResizable(True)
 
-    window.setCentralWidget(widget)
+    window.setCentralWidget(scroll)
+    processButton = QtGui.QPushButton("Ilya's processing", window)
+    imageAddress = ""
+    processButton.clicked.connect(lambda: addNewKeyframe(layout,
+                                                         widget,
+                                                         ILYA(data,
+                                                              imageAddress,
+                                                              obj),
+                                                         obj))
+    processButton.setVisible(True)
 
     window.show()
     app.exec_()
 
 
 def demo(number_of_inputs):
-    name = "teapot"
-    object_address = "samples/{}/mesh.obj".format(name)
+    object_address = "samples/teapot/mesh.obj"
     obj = load_object(object_address)
     data = {}
     counters = collections.defaultdict(int)
-    method = base.input_interface.METHODS["two files"]
-    for key, frame in method(name,
-                             "samples/{}/image.png".format(name),
-                             "samples/{0}/{0}".format(name)).load().items():
-        counters[key] += 1
-        if counters[key] > 1:
-            key += str(counters[key])
-        data[key] = frame
+    for _ in range(number_of_inputs):
+        method = base.input_interface.METHODS["bulk folder"]
+        for key, frame in method("samples/teapots").load().items():
+            counters[key] += 1
+            if counters[key] > 1:
+                key += str(counters[key])
+            data[key] = frame
     print("Read finished", file=sys.stderr)
     initialiseGuiAndProcess(data, obj)
 
