@@ -1,7 +1,5 @@
 import cv2
-import numpy as np
-from OpenGL.GL import *
-from OpenGL.GLU import *
+from OpenGL import GL
 from PySide.QtCore import QRectF, Qt
 from PySide.QtGui import QImage
 from PySide.QtOpenGL import QGLWidget
@@ -16,94 +14,96 @@ class KeyFramePreview(QGLWidget):
         QGLWidget.__init__(self, parent)
         self.frame = _keyframe
         self.object = _object
-        w, h = self.frame.image.shape[1], self.frame.image.shape[0]
-        self.setGeometry(0, 0, w, h)
-        glViewport(0, 0, w, h)
-
-    def paintGL(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glDisable(GL_DEPTH_TEST)
-        glEnable(GL_TEXTURE_2D)
-
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(-1, 1, -1, 1, -1, 1)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glPolygonMode(GL_FRONT, GL_FILL)
-
-        self.qglColor(Qt.white)
-        self.drawTexture(QRectF(-1, -1, 2, 2), self.texture)
-
-        glDisable(GL_TEXTURE_2D)
-
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
-        glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
-
-        glMatrixMode(GL_MODELVIEW)
-
-        glEnable(GL_DEPTH_TEST)
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE)
-        glPolygonMode(GL_FRONT, GL_FILL)
-        self.qglColor(Qt.white)
-        self.drawObject()
-        glPolygonMode(GL_FRONT, GL_LINE)
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)
-        glDepthMask(GL_FALSE)
-        self.qglColor(Qt.black)
-        self.drawObject()
-        glDepthMask(GL_TRUE)
-
-        glFlush()
-
-    def drawObject(self):
-        glCallList(self.objectDrawer)
-
-    def rotate(self, rotation):
-        for vector, angle in zip(((0, 0, 1), (0, 1, 0), (1, 0, 0)),
-                                 reversed(rotation)):
-            glRotatef(angle, *vector)
 
     def initializeGL(self):
-        glClearDepth(1.0)
-        glDepthFunc(GL_LESS)
-        glShadeModel(GL_SMOOTH)
-        glEnable(GL_CULL_FACE)
-        glEnable(GL_POLYGON_OFFSET_FILL)
-        glPolygonOffset(1, 1)
+        GL.glClearDepth(1.0)
+        GL.glDepthFunc(GL.GL_LESS)
+        GL.glShadeModel(GL.GL_SMOOTH)
+        GL.glEnable(GL.GL_CULL_FACE)
+        GL.glEnable(GL.GL_POLYGON_OFFSET_FILL)
+        GL.glPolygonOffset(1, 1)
 
         image = cv2.flip(self.frame.image, 0)
         height, width, channel = image.shape
         image = QImage(image.data, width, height, QImage.Format_RGB888)
         self.texture = self.bindTexture(image.rgbSwapped())
 
-        self.objectDrawer = glGenLists(1)
-        glNewList(self.objectDrawer, GL_COMPILE)
+        self.objectDrawer = GL.glGenLists(1)
+        GL.glNewList(self.objectDrawer, GL.GL_COMPILE)
         points = self.object.get_points()
-        print(np.array(points))
-        print(np.array(self.object.get_faces()))
         for face in self.object.get_faces():
-            glBegin(GL_POLYGON)
+            GL.glBegin(GL.GL_POLYGON)
             for i in face:
                 point = points[i]
-                glVertex4fv(point)
-            glEnd()
-        glEndList()
+                GL.glVertex4fv(point)
+            GL.glEnd()
+        GL.glEndList()
 
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glMultMatrixf(self.frame.internal_camera_parameters.T)
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        GL.glMultMatrixf(self.frame.internal_camera_parameters.T)
 
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glTranslatef(*self.frame.camera_position.translation)
+        def rotate(self, rotation):
+            for vector, angle in zip(((0, 0, 1), (0, 1, 0), (1, 0, 0)),
+                                     reversed(rotation)):
+                GL.glRotatef(angle, *vector)
+
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glLoadIdentity()
+        GL.glTranslatef(*self.frame.camera_position.translation)
         self.rotate(self.frame.camera_position.orientation)
-        glTranslatef(*self.frame.object_position.translation)
+        GL.glTranslatef(*self.frame.object_position.translation)
         self.rotate(self.frame.object_position.orientation)
+
+    def paintGL(self):
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_TEXTURE_2D)
+
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glPushMatrix()
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glPushMatrix()
+
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        GL.glOrtho(-1, 1, -1, 1, -1, 1)
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glLoadIdentity()
+        GL.glPolygonMode(GL.GL_FRONT, GL.GL_FILL)
+
+        self.qglColor(Qt.white)
+        self.drawTexture(QRectF(-1, -1, 2, 2), self.texture)
+
+        GL.glDisable(GL.GL_TEXTURE_2D)
+
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glPopMatrix()
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glPopMatrix()
+
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+
+        def drawObject(self):
+            GL.glCallList(self.objectDrawer)
+
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glColorMask(GL.GL_FALSE, GL.GL_FALSE, GL.GL_FALSE, GL.GL_FALSE)
+        GL.glPolygonMode(GL.GL_FRONT, GL.GL_FILL)
+        self.qglColor(Qt.white)
+        self.drawObject()
+        GL.glPolygonMode(GL.GL_FRONT, GL.GL_LINE)
+        GL.glColorMask(GL.GL_TRUE, GL.GL_TRUE, GL.GL_TRUE, GL.GL_TRUE)
+        GL.glDepthMask(GL.GL_FALSE)
+        self.qglColor(Qt.black)
+        self.drawObject()
+        GL.glDepthMask(GL.GL_TRUE)
+
+        GL.glFlush()
+
+    def resizeGL(self, w, h):
+        x0, y0 = w // 2, h // 2
+        image_w, image_h = self.frame.image.shape[1], self.frame.image.shape[0]
+        coef = min(w / image_w, h / image_h)
+        w, h = int(image_w * coef), int(image_h * coef)
+        GL.glViewport(x0 - w // 2, y0 - h // 2, w, h)

@@ -18,13 +18,22 @@ def initialiseGuiAndProcess(data, obj):
 
     processButton = QtGui.QPushButton("Ilya's processing")
     window.addTab(processButton, "Process")
+    window.setMovable(True)
 
-    for label, keyframe in data.items():
+    for label, keyframe in sorted(data.items()):
         window.addTab(KeyFramePreview(keyframe, obj, window), label)
 
-    imageAddress = ""
-    processButton.clicked.connect(lambda: window.addTab(
-        KeyFramePreview(ILYA(data, imageAddress, obj), obj, window), "ILYA"))
+    def callILYA(args):
+        imageAddress = QtGui.QFileDialog.getOpenFileName(*args)
+        newKeyFrame = ILYA(data, imageAddress, obj)
+        window.addTab(KeyFramePreview(newKeyFrame, obj, window), "ILYA")
+
+    args = [window,
+            "Open Image",
+            os.getcwd(),
+            "Image Files (*.png *.jpg *.bmp)"]
+
+    processButton.clicked.connect(lambda: callILYA(args))
 
     window.show()
     app.exec_()
