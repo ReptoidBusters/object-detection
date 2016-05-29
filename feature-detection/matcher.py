@@ -7,25 +7,20 @@ norm = cv2.NORM_L2
 
 def init_feature(name):
     if name == 'sift':
-        detector = cv2.xfeatures2d.SIFT_create()
         norm = cv2.NORM_L2
     elif name == 'surf':
-        detector = cv2.xfeatures2d.SURF_create(800)
         norm = cv2.NORM_L2
     elif name == 'orb':
-        detector = cv2.ORB_create(400)
         norm = cv2.NORM_HAMMING
     elif name == 'akaze':
-        detector = cv2.AKAZE_create()
         norm = cv2.NORM_HAMMING
     elif name == 'brisk':
-        detector = cv2.BRISK_create()
         norm = cv2.NORM_HAMMING
     else:
         return None, None
 
     matcher = cv2.BFMatcher(norm)
-    return detector, matcher
+    return matcher
 
 
 def filter_matches(ps1, ps2, multimatches, thresh=100):
@@ -85,24 +80,16 @@ def build_matching(desc1, desc2, multimatches):
     return res
 
 
-def match_3d_features(kp1, kp2, feature_name):
+def match_features(desc1, desc2, feature_name):
     '''
-    kp1, kp2 - (desc, kp, 3d)
+    feature_name \in {'surf', 'sift', 'orb', 'akaze', 'brisk'}
     '''
     detector, matcher = init_feature(feature_name)
-
-    desc1 = [kp[0] for kp in kp1]  # kp[0] is actually a descriptor
-    desc2 = [kp[0] for kp in kp2]  # same here
 
     # PLAY WITH VALUE OF K MAYBE
     raw_matches = matcher.knnMatch(desc1, trainDescriptors=desc2, k=10)
 
-    # filter out matches by 3d distance
-    ps1 = [kp[2] for kp in kp1]  # 3d points
-    ps2 = [kp[2] for kp in kp2]
-    matches = filter_matches(ps1, ps2, raw_matches)
-
     # build stable matching
-    matches = build_matching(desc1, desc2, matches)
+    matches = build_matching(desc1, desc2, raw_matches)
 
     return matches
