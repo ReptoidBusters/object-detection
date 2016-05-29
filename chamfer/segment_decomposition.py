@@ -88,38 +88,103 @@ class PointSupport:
 
 
 class LineSegment:
-    def __init__(self, support, maxx, maxy):
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self):
+        self.orientation = None
+        self.ytype = None
+        self.point = None
+        self.orientation_channel = None
+        self.left_bound = None
+        self.right_bound = None
+        self.y_angle_coefficient = None
+        self.x_angle_coefficient = None
+
+    @staticmethod
+    def from_support(support, maxy, maxx):
+        # pylint: disable=protected-access
+        self = LineSegment()
         self.orientation = support.orientation
         self.ytype = self._determine_type()
-        self.point = self._get_base_point(support)
+
+        self._calculate_coefficients()
+
+        self.point = self._get_base_point(support.point)
         self.orientation_channel = support.orientation_channel
-        self._calculate_bounds(support, maxx, maxy)
+        self._calculate_bounds(support, maxy, maxx)
+
+        return self
+
+    @staticmethod
+    def from_orientation(orientation_channel,
+                         quantization_channels,
+                         coordinate):
+        # pylint: disable=protected-access
+        self = LineSegment()
+        self.orientation = angle_from_channel(orientation_channel,
+                                              quantization_channels)
+        self.ytype = self._determine_type()
+        self._calculate_coefficients()
+
+        if self.ytype:
+            self.point = numpy.array([coordinate, 0])
+        else:
+            self.point = numpy.array([0, coordinate])
+
+        self.orientation_channel = orientation_channel
+
+        return self
+
+    @staticmethod
+    def shifted(line_segment, shift):
+        # pylint: disable=protected-access
+        self = LineSegment()
+        self.orientation = line_segment.orientation
+        self.ytype = line_segment.ytype
+        self._calculate_coefficients()
+        self.point = self._get_base_point(line_segment.point + shift)
+        self.orientation_channel = line_segment.orientation_channel
+
+        if self.ytype:
+            axis = 1
+        else:
+            axis = 0
+
+        self.left_bound = line_segment.left_bound + shift[axis]
+        self.right_bound = line_segment.right_bound + shift[axis]
+
+        return self
+
+    def _calculate_coefficients(self):
+        if not self.ytype:
+            self.y_angle_coefficient = math.tan(self.orientation)
+        else:
+            self.x_angle_coefficient = 1 / math.tan(self.orientation)
 
     def _determine_type(self):
         return math.pi / 4 <= self.orientation <= 3 * math.pi / 4
 
     def _get_point_relative(self, index):
         if not self.ytype:
-            y_coord = int(round(math.tan(self.orientation) * index))
+            y_coord = int(round(self.y_angle_coefficient * index))
             point = numpy.array([index, y_coord])
         else:
-            x_coord = int(round(1 / math.tan(self.orientation) * index))
+            x_coord = int(round(self.x_angle_coefficient * index))
             point = numpy.array([x_coord, index])
 
         return point
 
-    def _get_point(self, index):
+    def get_point(self, index):
         return self.point + self._get_point_relative(index)
 
-    def _get_base_point(self, support):
+    def _get_base_point(self, given_point):
         if not self.ytype:
-            point = self._get_point_relative(support.point[0])
+            point = self._get_point_relative(given_point[0])
         else:
-            point = self._get_point_relative(support.point[1])
+            point = self._get_point_relative(given_point[1])
 
-        return support.point - point
+        return given_point - point
 
-    def _calculate_bounds(self, support, maxx, maxy):
+    def _calculate_bounds(self, support, maxy, maxx):
         if self.ytype:
             axis = 1
         else:
@@ -133,15 +198,15 @@ class LineSegment:
             self.right_bound = max(self.right_bound, candidate)
 
         while True:
-            point = self._get_point(self.left_bound)
-            if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
+            point = self.get_point(self.left_bound)
+            if 0 <= point[1] <= maxy and 0 <= point[0] <= maxx:
                 break
 
             self.left_bound += 1
 
         while True:
-            point = self._get_point(self.right_bound)
-            if 0 <= point[1] <= maxx and 0 <= point[0] <= maxy:
+            point = self.get_point(self.right_bound)
+            if 0 <= point[1] <= maxy and 0 <= point[0] <= maxx:
                 break
 
             self.right_bound -= 1
@@ -149,9 +214,12 @@ class LineSegment:
     def get_points_list(self):
         result = []
         for index in range(self.left_bound, self.right_bound + 1):
-            result.append(self._get_point(index))
+            result.append(self.get_point(index))
 
         return result
+
+    def get_points_amount(self):
+        return self.right_bound - self.left_bound + 1
 
 
 def find_support(edge_map, point_orientation_channel,
@@ -256,9 +324,9 @@ def linearize(edge_map, orientation_map,
             base_points[support.point[1]][support.point[0]] = 0
             continue
 
-        segments_list.append(LineSegment(support,
-                                         len(base_points) - 1,
-                                         len(base_points[0]) - 1))
+        segments_list.append(LineSegment.from_support(support,
+                                                      len(base_points) - 1,
+                                                      len(base_points[0]) - 1))
 
         for support_point in support.list:
             base_points[support_point[1]][support_point[0]] = 0
