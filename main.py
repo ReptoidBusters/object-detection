@@ -40,7 +40,7 @@ def initialiseGuiAndProcess(data, obj):
 
 
 def demo(number_of_inputs):
-    name = "cube"
+    name = "teapot"
     object_address = "samples/{}/mesh.obj".format(name)
     obj = load_object(object_address)
     data = {}

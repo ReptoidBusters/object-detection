@@ -1,3 +1,4 @@
+import cv2
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from PySide.QtCore import QSize, QRectF
@@ -11,30 +12,18 @@ class KeyFramePreview(QGLWidget):
     """
 
     normalSize = QSize(160, 90) * 2
-    isFull = 0
+    curSize = normalSize
 
     def __init__(self, _keyframe, _object, parent=None):
         QGLWidget.__init__(self, parent)
         self.frame = _keyframe
         self.object = _object
 
-        image = self.frame.image
-        height, width, channel = image.shape
-        image = glTexImage2D(GL_TEXTURE_2D,
-                             0,
-                             GL_RGB,
-                             height,
-                             width,
-                             0,
-                             GL_RGB,
-                             GL_UNSIGNED_BYTE,
-                             image)
-        self.texture = self.bindTexture(image)
-
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
         glDisable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
+
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         glMatrixMode(GL_PROJECTION)
@@ -45,8 +34,8 @@ class KeyFramePreview(QGLWidget):
         glOrtho(-1, 1, -1, 1, -1, 1)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-
         glPolygonMode(GL_FRONT, GL_FILL)
+
         glColor3f(1.0, 1.0, 1.0)
         self.drawTexture(QRectF(-1, -1, 2, 2), self.texture)
 
@@ -54,6 +43,8 @@ class KeyFramePreview(QGLWidget):
         glPopMatrix()
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()
+
+        glDisable(GL_TEXTURE_2D)
 
         glEnable(GL_DEPTH_TEST)
         glMatrixMode(GL_MODELVIEW)
@@ -74,7 +65,8 @@ class KeyFramePreview(QGLWidget):
             glEnd()
 
     def rotate(self, rotation):
-        for vector, angle in zip(((0, 0, 1), (0, 1, 0), (1, 0, 0)), rotation):
+        for vector, angle in zip(((0, 0, 1), (0, 1, 0), (1, 0, 0)),
+                                 reversed(rotation)):
             glRotatef(angle, *vector)
 
     def initializeGL(self):
@@ -83,6 +75,12 @@ class KeyFramePreview(QGLWidget):
         glEnable(GL_POLYGON_OFFSET_FILL)
         glPolygonOffset(1, 1)
         glShadeModel(GL_SMOOTH)
+        glEnable(GL_CULL_FACE)
+
+        image = cv2.flip(self.frame.image, 0)
+        height, width, channel = image.shape
+        image = QImage(image.data, width, height, QImage.Format_RGB888)
+        self.texture = self.bindTexture(image.rgbSwapped())
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -94,11 +92,19 @@ class KeyFramePreview(QGLWidget):
         self.rotate(self.frame.camera_position.orientation)
         glTranslatef(*self.frame.object_position.translation)
         self.rotate(self.frame.object_position.orientation)
-        self.resize(self.normalSize)
 
     def mousePressEvent(self, event):
-        self.resize(self.normalSize if self.isFull else self.parent().size())
-        self.isFull ^= 1
+        self.curSize = (self.parent().size() if self.curSize == self.normalSize
+                        else self.normalSize)
+        self.resize(self.curSize)
+
+    def resizeEvent(self, event):
+        tmp = (self.curSize if self.curSize == self.normalSize
+               else event.size())
+        w, h = tmp.width(), tmp.height()
+        print(w, h)
+        self.setGeometry(10, 10, w, h)
+        self.resizeGL(w, h)
 
     def resizeGL(self, w, h):
         glViewport(0, 0, w, h)
