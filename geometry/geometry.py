@@ -155,6 +155,12 @@ class Object3D:
         world_point = model.dot(world_point).A1
         return world_point
 
+    def get_points(self):
+        return self._point_store.get_all_points()
+
+    def get_faces(self):
+        return self._faces
+
 
 class PointStore:
     def __init__(self, points):
@@ -173,3 +179,6 @@ class PointStore:
         if i is list or tuple, return list of points
         """
         return self._array[i, :]
+
+    def get_all_points(self):
+        return self._array

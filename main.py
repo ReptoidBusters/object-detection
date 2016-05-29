@@ -5,7 +5,6 @@ import sys
 import os
 from gui.preview import KeyFramePreview
 from PySide import QtGui
-from PySide.QtCore import Qt
 from geometry import load_object
 
 
@@ -13,48 +12,19 @@ def read_args(args_list):
     return (input("Enter {}: ".format(arg)) for arg in args_list)
 
 
-def addNewKeyframe(layout, widget, keyframe, obj):
-    subwidget = KeyFramePreview(keyframe, obj, widget)
-    subwidget.resize(widget.size())
-    layout.addWidget(subwidget)
-
-
 def initialiseGuiAndProcess(data, obj):
     app = QtGui.QApplication(sys.argv)
+    window = QtGui.QTabWidget()
 
-    window = QtGui.QMainWindow()
-    window.setWindowTitle('Images')
-    window.setFixedSize(1248, 702)
-    window.setFocus()
+    processButton = QtGui.QPushButton("Ilya's processing")
+    window.addTab(processButton, "Process")
 
-    widget = QtGui.QWidget()
-
-    layout = QtGui.QVBoxLayout(widget)
-    widget.setLayout(layout)
-    widget.setVisible(True)
-    widget.resize(window.size().width() - 20, window.size().height() - 10)
     for label, keyframe in data.items():
-        addNewKeyframe(layout, widget, keyframe, obj)
+        window.addTab(KeyFramePreview(keyframe, obj, window), label)
 
-    scroll = QtGui.QScrollArea(window)
-    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    scroll.setWidgetResizable(False)
-    scroll.setAlignment(Qt.AlignRight)
-    scroll.setVisible(True)
-    scroll.setWidget(widget)
-
-    window.setCentralWidget(scroll)
-
-    processButton = QtGui.QPushButton("Ilya's processing", window)
     imageAddress = ""
-    processButton.clicked.connect(lambda: addNewKeyframe(layout,
-                                                         widget,
-                                                         ILYA(data,
-                                                              imageAddress,
-                                                              obj),
-                                                         obj))
-    processButton.setVisible(True)
+    processButton.clicked.connect(lambda: window.addTab(
+        KeyFramePreview(ILYA(data, imageAddress, obj), obj, window), "ILYA"))
 
     window.show()
     app.exec_()

@@ -1,7 +1,8 @@
 import cv2
+import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from PySide.QtCore import QRectF, Qt, QSize
+from PySide.QtCore import QRectF, Qt
 from PySide.QtGui import QImage
 from PySide.QtOpenGL import QGLWidget
 
@@ -11,13 +12,13 @@ class KeyFramePreview(QGLWidget):
         image + matched object projection
     """
 
-    normalSize = QSize(160, 90) * 2
-
     def __init__(self, _keyframe, _object, parent=None):
         QGLWidget.__init__(self, parent)
         self.frame = _keyframe
         self.object = _object
-        self.curSize = self.normalSize
+        w, h = self.frame.image.shape[1], self.frame.image.shape[0]
+        self.setGeometry(0, 0, w, h)
+        glViewport(0, 0, w, h)
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -85,11 +86,14 @@ class KeyFramePreview(QGLWidget):
 
         self.objectDrawer = glGenLists(1)
         glNewList(self.objectDrawer, GL_COMPILE)
-        for face in self.object.faces:
+        points = self.object.get_points()
+        print(np.array(points))
+        print(np.array(self.object.get_faces()))
+        for face in self.object.get_faces():
             glBegin(GL_POLYGON)
             for i in face:
-                point = self.object.points[i]
-                glVertex3f(point.x, point.y, point.z)
+                point = points[i]
+                glVertex4fv(point)
             glEnd()
         glEndList()
 
@@ -103,19 +107,3 @@ class KeyFramePreview(QGLWidget):
         self.rotate(self.frame.camera_position.orientation)
         glTranslatef(*self.frame.object_position.translation)
         self.rotate(self.frame.object_position.orientation)
-
-    def mousePressEvent(self, event):
-        self.curSize = (self.parent().size() if self.curSize == self.normalSize
-                        else self.normalSize)
-        self.resize(self.curSize)
-
-    def resizeEvent(self, event):
-        tmp = (self.curSize if self.curSize == self.normalSize
-               else event.size())
-        w, h = tmp.width(), tmp.height()
-        print(w, h)
-        self.resize(w, h)
-        self.resizeGL(w, h)
-
-    def resizeGL(self, w, h):
-        glViewport(0, 0, w, h)
