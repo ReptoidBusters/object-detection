@@ -1,7 +1,6 @@
 from math import cos
 from math import sin
 from math import atan2
-from math import acos
 import numpy as np
 import numpy.linalg as lin
 __author__ = 'Artyom_Lobanov'
@@ -141,4 +140,13 @@ def rotation_matrix(angles):
     matrix_x = rotation_matrix_x(angles[0])
     matrix_y = rotation_matrix_y(angles[1])
     matrix_z = rotation_matrix_z(angles[2])
-    return matrix_x.dot(matrix_y).dot(matrix_z)
+    return matrix_z.dot(matrix_y).dot(matrix_x)
+
+
+def transformation_matrix(translation, rotation):
+    rotation = rotation_matrix(rotation)
+    result = np.ndarray((4, 4), dtype=np.float_)
+    result[:3, :3] = rotation
+    result[:3, 3] = translation
+    result[3] = 0, 0, 0, 1
+    return np.matrix(result)

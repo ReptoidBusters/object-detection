@@ -3,6 +3,7 @@ import numpy.linalg as lin
 import numpy as np
 from geometry.geometry3d import ConvexPolygon
 from geometry.geometry3d import Ray
+from geometry.geometry3d import transformation_matrix
 from geometry.geometry3d import rotation_matrix
 from geometry.geometry3d import get_angle
 
@@ -10,10 +11,15 @@ __author__ = 'Artyom_Lobanov'
 
 
 ACUTE_ANGLE_BOUND = math.pi / 6
+ORIGIN = np.array([0, 0, 0, 1])
 
 
 def _to_cartesian_coordinates(point):
     return point[:3] / point[3]
+
+
+def _to_homogeneous_coordinates(point):
+    return np.array([point[0], point[1], point[2], 1])
 
 
 class Object3D:
@@ -115,14 +121,39 @@ class Object3D:
                 res = point
         return res
 
-    def get_original(self, camera_position, camera_params, screen_x, screen_y):
-        x_relative_to_centre = screen_x - camera_params[0, 2]
-        y_relative_to_centre = screen_y - camera_params[1, 2]
-        point = np.ndarray([x_relative_to_centre, y_relative_to_centre, 1])
-        point = rotation_matrix(-camera_position.orientation).dot(point).A1
-        point = point + camera_position.translation
-        ray = Ray(camera_position.translation, point)
-        return self._intersect(ray)
+    # pylint: disable=too-many-arguments
+    def get_original(self, model, view, projection, screen_size, point2d):
+        point2d = 2 * point2d / screen_size - 1
+        point = np.array([point2d[0], point2d[1], 1, 1])
+
+        # transform model and view to matrices
+        model = transformation_matrix(model.translation, model.orientation)
+        view = transformation_matrix(view.translation, view.orientation)
+
+        # full matrix os transformation from point in object's coordinates
+        # to camera's coordinates
+        transformation = projection.dot(view).dot(model)
+
+        inverse_transformation = lin.inv(transformation)
+
+        # some point on the same ray as original point
+        point = inverse_transformation.dot(point).A1
+
+        # position of camera in object's coordinates
+        camera_point = lin.inv(view.dot(model)).dot(ORIGIN).A1
+
+        # convert points to useful coordinates
+        point = _to_cartesian_coordinates(point)
+        camera_point = _to_cartesian_coordinates(camera_point)
+
+        ray = Ray(camera_point, point)
+        # original point in object's coordinates
+        point3d = self._intersect(ray)
+
+        # original point in world's coordinates
+        world_point = _to_homogeneous_coordinates(point3d)
+        world_point = model.dot(world_point).A1
+        return world_point
 
 
 class PointStore:
