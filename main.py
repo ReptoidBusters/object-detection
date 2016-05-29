@@ -15,7 +15,7 @@ def read_args(args_list):
 
 def addNewKeyframe(layout, widget, keyframe, obj):
     subwidget = KeyFramePreview(keyframe, obj, widget)
-    subwidget.resize(KeyFramePreview.normalSize)
+    subwidget.resize(widget.size())
     layout.addWidget(subwidget)
 
 
@@ -29,21 +29,23 @@ def initialiseGuiAndProcess(data, obj):
 
     widget = QtGui.QWidget()
 
-    layout = QtGui.QHBoxLayout(widget)
+    layout = QtGui.QVBoxLayout(widget)
+    widget.setLayout(layout)
+    widget.setVisible(True)
+    widget.resize(window.size().width() - 20, window.size().height() - 10)
     for label, keyframe in data.items():
         addNewKeyframe(layout, widget, keyframe, obj)
-    widget.setLayout(layout)
 
     scroll = QtGui.QScrollArea(window)
-    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     scroll.setWidgetResizable(False)
     scroll.setAlignment(Qt.AlignRight)
     scroll.setVisible(True)
     scroll.setWidget(widget)
-    scroll.setWidgetResizable(True)
 
     window.setCentralWidget(scroll)
+
     processButton = QtGui.QPushButton("Ilya's processing", window)
     imageAddress = ""
     processButton.clicked.connect(lambda: addNewKeyframe(layout,
@@ -59,7 +61,7 @@ def initialiseGuiAndProcess(data, obj):
 
 
 def demo(number_of_inputs):
-    object_address = "samples/teapot/mesh.obj"
+    object_address = "samples/teapot.obj"
     obj = load_object(object_address)
     data = {}
     counters = collections.defaultdict(int)
