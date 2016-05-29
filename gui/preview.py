@@ -15,6 +15,11 @@ class KeyFramePreview(QGLWidget):
         self.frame = _keyframe
         self.object = _object
 
+    def rotate(self, rotation):
+        for vector, angle in zip(((0, 0, 1), (0, 1, 0), (1, 0, 0)),
+                                 reversed(rotation)):
+            GL.glRotatef(angle, *vector)
+
     def initializeGL(self):
         GL.glClearDepth(1.0)
         GL.glDepthFunc(GL.GL_LESS)
@@ -43,17 +48,15 @@ class KeyFramePreview(QGLWidget):
         GL.glLoadIdentity()
         GL.glMultMatrixf(self.frame.internal_camera_parameters.T)
 
-        def rotate(self, rotation):
-            for vector, angle in zip(((0, 0, 1), (0, 1, 0), (1, 0, 0)),
-                                     reversed(rotation)):
-                GL.glRotatef(angle, *vector)
-
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadIdentity()
         GL.glTranslatef(*self.frame.camera_position.translation)
         self.rotate(self.frame.camera_position.orientation)
         GL.glTranslatef(*self.frame.object_position.translation)
         self.rotate(self.frame.object_position.orientation)
+
+    def drawObject(self):
+        GL.glCallList(self.objectDrawer)
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -83,9 +86,6 @@ class KeyFramePreview(QGLWidget):
         GL.glPopMatrix()
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
-
-        def drawObject(self):
-            GL.glCallList(self.objectDrawer)
 
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glColorMask(GL.GL_FALSE, GL.GL_FALSE, GL.GL_FALSE, GL.GL_FALSE)
