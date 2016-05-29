@@ -1,4 +1,5 @@
 import numpy
+import cv2
 from . segment_decomposition import LineSegment
 from . segment_decomposition import get_edge_map
 from . segment_decomposition import get_orientation_map
@@ -162,6 +163,35 @@ class Matcher:
                                                self.pattern_orientation_map,
                                                self.quantization_channels,
                                                self.pattern_pixel_residual)
+
+    def set_pattern_via_edge_list(self, edge_list):
+        for i in range(0, len(edge_list)):
+            for j in range(0, len(edge_list[i])):
+                edge_list[i][j] = numpy.round(edge_list[i][j]).astype(int)
+
+        maxx = minx = edge_list[0][0][0]
+        maxy = miny = edge_list[0][0][1]
+
+        for edge in edge_list:
+            for point in edge:
+                minx = min(minx, point[0])
+                miny = min(miny, point[1])
+                maxx = max(maxx, point[0])
+                maxy = max(maxy, point[1])
+
+        shift = [minx, miny]
+        for i in range(0, len(edge_list)):
+            for j in range(0, len(edge_list[i])):
+                edge_list[i][j] -= shift
+
+        pattern = numpy.zeros((maxy - miny + 1, maxx - minx + 1, 3))
+        for edge in edge_list:
+            point1 = (edge[0][0], edge[0][1])
+            point2 = (edge[1][0], edge[1][1])
+            cv2.line(pattern, point1, point2, (255, 255, 255))
+
+        self.set_pattern(pattern)
+        return pattern
 
     def _inf_pattern_cost(self):
         img_shape = self.img_edge_map.shape
