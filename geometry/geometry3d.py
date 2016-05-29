@@ -54,7 +54,7 @@ class Plane:
 
     def __repr__(self):
         normal = "(" + ", ".join([str(x) for x in self.normal]) + ")"
-        return "Plane[Normal = " + normal + "; D = " + str(self.distance) + "]"
+        return "Plane[Normal = " + normal + ";D = " + str(self.distance) + "]"
 
 
 class Ray:
@@ -92,7 +92,7 @@ class ConvexPolygon:
 
     def __init__(self, points):
         self.points = points
-        self.plane = Plane.create_plane(points[0], points[1], points[2])
+        self._plane = Plane.create_plane(points[0], points[1], points[2])
 
     def intersect(self, ray):
         """
@@ -100,7 +100,7 @@ class ConvexPolygon:
         If there is many such point, return None.
         If there is no such point, return None.
         """
-        suspect = self.plane.intersect(ray)
+        suspect = self._plane.intersect(ray)
         if suspect is None:
             return None
         if self.contain(suspect):

@@ -7,62 +7,62 @@ __author__ = 'Artyom_Lobanov'
 class Parser:
 
     def __init__(self):
-        self.points = []
-        self.faces = []
-        self.object = None
-        self.path = None
+        self._points = []
+        self._faces = []
+        self._object = None
+        self._path = None
 
     def read_file(self, path):
-        self.points = []
-        self.faces = []
-        self.path = path
+        self._points = []
+        self._faces = []
+        self._path = path
         with open(path) as file:
             for line in file.readlines():
-                self.parse(line)
-        self.object = Object3D(self.faces, self.points)
+                self._parse(line)
+        self._object = Object3D(self._faces, self._points)
 
-    def parse(self, line):
+    def _parse(self, line):
         line = line.strip()  # remove spaces from the begin of line
         if line.startswith("v "):  # new point
-            self.parse_point(line)
+            self._parse_point(line)
         if line.startswith("f "):  # new polygon
-            self.parse_face(line)
+            self._parse_face(line)
 
-    def parse_point(self, line):
+    def _parse_point(self, line):
         args = [float(x) for x in line.split()[1:]]
         if len(args) == 3:
             args += [1]
-        self.points.append(np.asarray(args))
+        self._points.append(np.asarray(args))
 
-    def parse_face(self, line):
+    def _parse_face(self, line):
         def validate(i):
             i = int(i)
             if i > 0:
                 i -= 1
             else:
-                i += len(self.points)
+                i += len(self._points)
             return i
         params = line.split()  # get tokens
         # cut numbers of points from line
         params = [word.split("/")[0] for word in params[1:]]
         # translate numbers to valid index
         params = [validate(num) for num in params]
-        self.faces.append(np.asarray(params))
+        self._faces.append(np.asarray(params))
 
     def get_object(self):
-        return self.object
+        return self._object
 
     def get_points(self):
-        return self.points
+        return self._points
 
     def get_faces(self):
-        return self.faces
+        return self._faces
 
     def __repr__(self):
-        if not self.object:
+        if not self._object:
             return "Parser is empty"
-        return "File " + self.path + " parsed. Object read: \n" \
-               + self.object.__repr__()
+        return "File " + self._path + " parsed. Object read: \n" \
+               + self._object.__repr__()
 
 
 def load_object(path):
