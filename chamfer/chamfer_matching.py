@@ -1,5 +1,5 @@
 import sys
-from segment_decomposition import*
+from . segment_decomposition import*
 
 class LinearFunction:
     def __init__(self, coefficient, constant):
