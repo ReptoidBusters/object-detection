@@ -119,7 +119,7 @@ class Object3D:
         x_relative_to_centre = screen_x - camera_params[0, 2]
         y_relative_to_centre = screen_y - camera_params[1, 2]
         point = np.ndarray([x_relative_to_centre, y_relative_to_centre, 1])
-        point = rotation_matrix(-camera_position.orientation).dot(point)
+        point = rotation_matrix(-camera_position.orientation).dot(point).A1
         point = point + camera_position.translation
         ray = Ray(camera_position.translation, point)
         return self._intersect(ray)

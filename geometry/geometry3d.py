@@ -1,5 +1,6 @@
 from math import cos
 from math import sin
+from math import atan2
 from math import acos
 import numpy as np
 import numpy.linalg as lin
@@ -79,13 +80,11 @@ def is_collinear(vector_a, vector_b):
 
 
 def get_angle(vector_a, vector_b):
-    len_a = lin.norm(vector_a)
-    len_b = lin.norm(vector_b)
-    if not len_a or not len_b:
-        return 0
     scalar_product = np.dot(vector_a, vector_b)
-    cos_a = scalar_product / (len_a * len_b)
-    return acos(cos_a)
+    cross_product = lin.norm(np.cross(vector_a, vector_b))
+    if not cross_product and not scalar_product:
+        return 0
+    return atan2(cross_product, scalar_product)
 
 
 class ConvexPolygon:
