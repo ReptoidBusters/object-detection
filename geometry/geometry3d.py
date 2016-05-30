@@ -148,6 +148,7 @@ def transformation_matrix(translation, rotation):
     rotation = rotation_matrix(rotation)
     result = np.ndarray((4, 4), dtype=np.float_)
     result[:3, :3] = rotation
+    #print("TRANSLATION: ", translation)
     result[:3, 3] = translation
     result[3] = 0, 0, 0, 1
     return np.matrix(result)
