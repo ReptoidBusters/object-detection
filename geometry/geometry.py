@@ -1,6 +1,6 @@
+from math import pi
 import numpy.linalg as lin
 import numpy as np
-from math import pi
 from geometry.geometry3d import ConvexPolygon
 from geometry.geometry3d import Ray
 from geometry.geometry3d import transformation_matrix
@@ -9,7 +9,7 @@ from geometry.geometry3d import get_angle
 __author__ = 'Artyom_Lobanov'
 
 
-ACUTE_ANGLE_BOUND = 2/3 * pi
+ACUTE_ANGLE_BOUND = 2 / 3 * pi
 ORIGIN = np.array([0, 0, 0, 1])
 
 
@@ -144,7 +144,8 @@ class Object3D:
         edges are defined by two homogeneous point on picture
            z coordinates isn't really important
 
-        edges will be returned, if its probably lying on shape of object in picture
+        edges will be returned, if its probably lying
+            on shape of object in picture
         """
         is_visible = self._check_visible(model, view)
 
@@ -228,6 +229,10 @@ class PointStore:
         for i, point in enumerate(points):
             self._array[i, :] = point
 
+    def set_array(self, array):
+        self._array = array
+        self.size = array.shape[0]
+
     def transform(self, transformation):
         # matrix.A is an ndarray with equal elements
         self._array = self._array.dot(transformation.transpose()).A
@@ -235,7 +240,7 @@ class PointStore:
     def get_transformed(self, transformation):
         res = PointStore([])
         res.size = self.size
-        res._array = self._array.dot(transformation.transpose()).A
+        res.set_array(self._array.dot(transformation.transpose()).A)
         return res
 
     def get_points(self, i):
