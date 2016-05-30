@@ -6,5 +6,7 @@ virtualenv:
   system_site_packages: true
 before_install:
   - sudo apt-get install python3-pyside
+install:
+  - pip install -r requirements.txt
 script:
   - prospector -s veryhigh
