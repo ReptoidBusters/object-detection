@@ -2,11 +2,8 @@ language:
   - python
 python:
   - "3.4"
-virtualenv:
-  system_site_packages: true
-before_install:
-  - sudo apt-get install python3-pyside
 install:
+  - sudo apt-get install python3-pyside
   - pip install -r requirements.txt
 script:
   - prospector -s veryhigh
