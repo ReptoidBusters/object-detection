@@ -38,8 +38,8 @@ def GLtoCV2d(point, img_size):
     return (point[0], img_size[1] - point[1])
 
 
-def myRansac(DEBUG_IMG, obj_points, img_points, projection, img_size, projectionError=10,
-             confidence=0.7, iterations=100):
+def myRansac(DEBUG_IMG, obj_points, img_points, projection, view, 
+             img_size, projectionError=10, confidence=0.7, iterations=500):
     ms = projection[:3, :3]
     p_cnt = len(obj_points)
     homo_obj_points = []
@@ -49,7 +49,7 @@ def myRansac(DEBUG_IMG, obj_points, img_points, projection, img_size, projection
         homo_obj_points.append(np.array([obj_points[i][0], obj_points[i][1],
                                          -obj_points[i][2], 1]))
 
-    print("stretched: ", stretched_img_points)
+    #print("stretched: ", stretched_img_points)
 
     tvec_ans = np.array([0, 0, 0])
     rvec_ans = np.array([0, 0, 0])
@@ -60,14 +60,15 @@ def myRansac(DEBUG_IMG, obj_points, img_points, projection, img_size, projection
     print("SIZE: ", img_size)
     for iteration_number in range(iterations):
         rand_sample = gen_rand_sample(p_cnt, 5)
-        print(rand_sample)
+        #print(rand_sample)
         sample_obj = np.array([obj_points[i] for i in rand_sample])
         sample_img = np.array([img_points[i] for i in rand_sample])
         found, rvec, tvec = cv2.solvePnP(sample_obj, sample_img, ms,
                                          None)
-        print("rvec: ", rvec, "tvec: ", tvec)
+        #print("rvec: ", rvec, "tvec: ", tvec)
         tvec = [float(i) for i in tvec]
-        transformation = projection.dot(transformation_matrix(tvec, rvec))
+        view_transformation = transformation_matrix(view.translation, view.orientation)
+        transformation = projection.dot(view_transformation).dot(transformation_matrix(tvec, rvec))
         # Projecting points into plane
         proj_obj_points = [transformation.dot(homo_obj_points[i]).A1 for i in range(p_cnt)]
 
@@ -76,6 +77,7 @@ def myRansac(DEBUG_IMG, obj_points, img_points, projection, img_size, projection
             proj_obj_points[i] = np.array(proj_obj_points[i][:2] / proj_obj_points[i][3])
             proj_obj_points[i] = (proj_obj_points[i] + 1) * img_size / 2
 
+        '''
         if (abs(tvec[0]-2) < EPS and abs(tvec[1]) < EPS and abs(tvec[2]) < EPS and
                 debugger == 0):
             print(tvec[0], EPS)
@@ -93,6 +95,7 @@ def myRansac(DEBUG_IMG, obj_points, img_points, projection, img_size, projection
                     print("DANIEL: ", pt1[0], pt2[0], "y: ", pt1[1], pt2[1])
             #cv2.imshow("damn, daniel", DEBUG_IMG)
             debugger = 1
+        '''
 
         inliers = 0
         for i in range(p_cnt):
@@ -100,7 +103,7 @@ def myRansac(DEBUG_IMG, obj_points, img_points, projection, img_size, projection
             if euclidDist(proj_obj_points[i] - stretched_img_points[i]) < projectionError:
                 inliers += 1
         if inliers > best_inliers:
-            print("HEHEHHEHEHEH")
+            #print("HEHEHHEHEHEH")
             found = True
             tvec_ans = tvec
             rvec_ans = rvec
@@ -200,8 +203,8 @@ def processImage(keyframes, imgAddr, obj):
     imgAddr = imgAddr[0]
     print(imgAddr)
     keyframe = next(iter(keyframes.values()))
-    initial_camera_parameters = (keyframe.camera_position, keyframe.internal_camera_parameters)
-    print("petuham privet: ", keyframe.internal_camera_parameters)
+    initial_camera_parameters = (keyframe.camera_position, keyframe.internal_camera_parameters, 
+                                 keyframe.object_position)
     print("Initial position: ", keyframe.object_position.translation, keyframe.object_position.orientation)
     initial_position = frame.Position(keyframe.object_position.translation.copy(),
                                       keyframe.object_position.orientation.copy())
@@ -234,7 +237,7 @@ def processImage(keyframes, imgAddr, obj):
 
     print("Number of matches: ", len(matches))
     for mt in matches:
-        print(sz_key, mt[0], sz_img, mt[1])
+        #print(sz_key, mt[0], sz_img, mt[1])
 
         clr = (0, 0, 255)
         pt1 = keypoints[mt[1]][0]
@@ -247,10 +250,11 @@ def processImage(keyframes, imgAddr, obj):
         if int(pt1[1]) == int(pt2[1]):
             inliers += 1
             # INTERESTING APPROACH
-            obj_points.append(GLtoCV3d(keyframepoints[mt[0]][1]))
-            img_points.append(GLtoCV2d(keypoints[mt[1]][0], img_size))
         else:
             outliers += 1
+        obj_points.append(GLtoCV3d(keyframepoints[mt[0]][1]))
+        img_points.append(GLtoCV2d(keypoints[mt[1]][0], img_size))
+
 
     print("inliers: ", inliers)
     print("outliers: ", outliers)
@@ -266,8 +270,10 @@ def processImage(keyframes, imgAddr, obj):
     '''
     ms = keyframe.internal_camera_parameters
 
+    '''
     print("CAMERA MATRIS: ")
     print(ms)
+    '''
 
     qqq = len(img_points)
     
@@ -280,7 +286,8 @@ def processImage(keyframes, imgAddr, obj):
     
 
     inliers, rvec, tvec = myRansac(DEBUG_IMG, np.array(obj_points),
-                                          np.array(img_points), ms, img_size)
+                                   np.array(img_points), ms,
+                                   keyframe.camera_position, img_size)
 
     print("Best inliers: ", inliers)
 
@@ -305,6 +312,7 @@ def processImage(keyframes, imgAddr, obj):
 
     keyframe.camera_position = initial_camera_parameters[0]
     keyframe.internal_camera_parameters = initial_camera_parameters[1]
+    keyframe.object_position = initial_camera_parameters[2]
 
     return frame.KeyFrame(img, initial_camera_parameters[0],
                           initial_camera_parameters[1],
