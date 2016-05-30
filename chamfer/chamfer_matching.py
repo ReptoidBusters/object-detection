@@ -167,6 +167,9 @@ class Matcher:
     def set_pattern_via_edge_list(self, edge_list):
         for i in range(0, len(edge_list)):
             for j in range(0, len(edge_list[i])):
+                point = edge_list[i][j]
+                edge_list[i][j] = numpy.array([point[0] / point[3],
+                                               point[1] / point[3]])
                 edge_list[i][j] = numpy.round(edge_list[i][j]).astype(int)
 
         maxx = minx = edge_list[0][0][0]
@@ -210,7 +213,7 @@ class Matcher:
                       img_shape[1] - pattern_shape[1])
 
         cost = self._inf_pattern_cost()
-        occurrence = numpy.array([0, 0])
+        occurrence = (0, 0)
         for ycrd in range(0, diff_shape[0]):
             for xcrd in range(0, diff_shape[1]):
                 current_cost = 0
@@ -231,6 +234,6 @@ class Matcher:
 
                 if current_cost < cost:
                     cost = current_cost
-                    occurrence = numpy.array([xcrd, ycrd])
+                    occurrence = (xcrd, ycrd)
 
         return occurrence
