@@ -17,9 +17,9 @@ def init_feature(name):
     elif name == 'brisk':
         norm = cv2.NORM_HAMMING
     else:
-        return None, None
+        return None
 
-    matcher = cv2.BFMatcher(norm)
+    matcher = cv2.BFMatcher()
     return matcher
 
 
@@ -44,7 +44,7 @@ def euclid_dist(p1, p2):
 
 
 def descriptor_dist(desc1, desc2):
-    diff = [d1 - d2 for d1, d2 in zip(desc1, desc2)]
+    diff = np.array([d1 - d2 for d1, d2 in zip(desc1, desc2)])
     return cv2.norm(diff, norm)
 
 
@@ -54,7 +54,8 @@ def build_matching(desc1, desc2, multimatches):
 
     for matches in multimatches:
         for m in matches:
-            distances[m[0]].append((descriptor_dist(desc1[m[0]], desc2[m[1]])))
+            distances[m[0]].append((descriptor_dist(desc1[m[0]], desc2[m[1]]),
+                                    m[1]))
     for i in range(n):
         distances[i] = sorted(distances[i])
 
@@ -76,7 +77,7 @@ def build_matching(desc1, desc2, multimatches):
     res = []
     for i in range(len(desc2)):
         if matching[i] != -1:
-            res.append(matching[i], i)
+            res.append((matching[i], i))
     return res
 
 
@@ -84,12 +85,23 @@ def match_features(desc1, desc2, feature_name):
     '''
     feature_name \in {'surf', 'sift', 'orb', 'akaze', 'brisk'}
     '''
-    detector, matcher = init_feature(feature_name)
+    matcher = init_feature(feature_name)
+
+    print("Matching features...")
+    print("desc1.sz =", len(desc1), "desc2.sz =", len(desc2))
 
     # PLAY WITH VALUE OF K MAYBE
-    raw_matches = matcher.knnMatch(desc1, trainDescriptors=desc2, k=10)
+    print(type(desc1))
+    print(type(desc2))
+    raw_matches = matcher.knnMatch(np.array(desc1), np.array(desc2), k=10)
+    nice_matches = []
+    for matches in raw_matches:
+        cur_res = []
+        for match in matches:
+            cur_res.append((match.queryIdx, match.trainIdx))
+        nice_matches.append(cur_res)
 
     # build stable matching
-    matches = build_matching(desc1, desc2, raw_matches)
+    matches = build_matching(desc1, desc2, nice_matches)
 
     return matches
