@@ -5,7 +5,6 @@ import sys
 import os
 from gui.preview import KeyFramePreview
 from PySide import QtGui
-from PySide.QtCore import Qt
 from geometry import load_object
 
 
@@ -13,53 +12,35 @@ def read_args(args_list):
     return (input("Enter {}: ".format(arg)) for arg in args_list)
 
 
-def addNewKeyframe(layout, widget, keyframe, obj):
-    subwidget = KeyFramePreview(keyframe, obj, widget)
-    subwidget.resize(KeyFramePreview.normalSize)
-    layout.addWidget(subwidget)
-
-
 def initialiseGuiAndProcess(data, obj):
     app = QtGui.QApplication(sys.argv)
+    window = QtGui.QTabWidget()
 
-    window = QtGui.QMainWindow()
-    window.setWindowTitle('Images')
-    window.setFixedSize(1248, 702)
-    window.setFocus()
+    processButton = QtGui.QPushButton("Ilya's processing")
+    window.addTab(processButton, "Process")
+    window.setMovable(True)
 
-    widget = QtGui.QWidget()
+    for label, keyframe in sorted(data.items()):
+        window.addTab(KeyFramePreview(keyframe, obj, window), label)
 
-    layout = QtGui.QHBoxLayout(widget)
-    for label, keyframe in data.items():
-        addNewKeyframe(layout, widget, keyframe, obj)
-    widget.setLayout(layout)
+    def callILYA(args):
+        imageAddress = QtGui.QFileDialog.getOpenFileName(*args)
+        newKeyFrame = ILYA(data, imageAddress, obj)
+        window.addTab(KeyFramePreview(newKeyFrame, obj, window), "ILYA")
 
-    scroll = QtGui.QScrollArea(window)
-    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-    scroll.setWidgetResizable(False)
-    scroll.setAlignment(Qt.AlignRight)
-    scroll.setVisible(True)
-    scroll.setWidget(widget)
-    scroll.setWidgetResizable(True)
+    args = [window,
+            "Open Image",
+            os.getcwd(),
+            "Image Files (*.png *.jpg *.bmp)"]
 
-    window.setCentralWidget(scroll)
-    processButton = QtGui.QPushButton("Ilya's processing", window)
-    imageAddress = ""
-    processButton.clicked.connect(lambda: addNewKeyframe(layout,
-                                                         widget,
-                                                         ILYA(data,
-                                                              imageAddress,
-                                                              obj),
-                                                         obj))
-    processButton.setVisible(True)
+    processButton.clicked.connect(lambda: callILYA(args))
 
     window.show()
     app.exec_()
 
 
 def demo(number_of_inputs):
-    object_address = "samples/teapot/mesh.obj"
+    object_address = "samples/teapot.obj"
     obj = load_object(object_address)
     data = {}
     counters = collections.defaultdict(int)
