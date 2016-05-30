@@ -1,16 +1,15 @@
-import math
 import numpy.linalg as lin
 import numpy as np
+from math import pi
 from geometry.geometry3d import ConvexPolygon
 from geometry.geometry3d import Ray
 from geometry.geometry3d import transformation_matrix
-from geometry.geometry3d import rotation_matrix
 from geometry.geometry3d import get_angle
 
 __author__ = 'Artyom_Lobanov'
 
 
-ACUTE_ANGLE_BOUND = math.pi / 6
+ACUTE_ANGLE_BOUND = 2/3 * pi
 ORIGIN = np.array([0, 0, 0, 1])
 
 
@@ -22,12 +21,22 @@ def _to_homogeneous_coordinates(point):
     return np.array([point[0], point[1], point[2], 1])
 
 
+def _full_transformation(model, view, projection, screen_size):
+    scaling = np.matrix([[screen_size[0] / 2, 0, 0, screen_size[0] / 2],
+                         [0, screen_size[1] / 2, 0, screen_size[1] / 2],
+                         [0, 0, 1, 0],
+                         [0, 0, 0, 1]])
+    model = transformation_matrix(model.translation, model.orientation)
+    view = transformation_matrix(view.translation, view.orientation)
+    return scaling.dot(projection).dot(view).dot(model)
+
+
 class Object3D:
 
     def __init__(self, faces, points):
         self._faces = faces  # list of numpy.array which define faces
         self._point_store = PointStore(points)
-        # maps edges to faces by numbers
+        # this list maps edges to faces by numbers
         self._neighbors = []
         self._edges = []
         self._interesting_edges = []
@@ -56,31 +65,62 @@ class Object3D:
                     self._neighbors.append([])
                 self._neighbors[index].append(face_number)
             self._normals[face_number] = find_normal(face)
-
         for edge_number, lst in enumerate(self._neighbors):
             if len(lst) != 2:
                 continue
             normal_a, normal_b = [self._normals[i] for i in lst]
             angle = get_angle(normal_a, normal_b)
-            if math.pi - angle < ACUTE_ANGLE_BOUND:
+            if pi - angle < ACUTE_ANGLE_BOUND:
                 self._interesting_edges.append(edge_number)
 
-    def _check_visible(self, camera_position):
-        matrix = rotation_matrix(-camera_position.orientation)
-        ray = matrix.dot([0, 0, 1]).A1
+    def _check_visible(self, model, view):
+        model = transformation_matrix(model.translation, model.orientation)
+        view = transformation_matrix(view.translation, view.orientation)
+
+        # convert camera's coordinates to object's coordinates
+        inverse_transform = lin.inv(view.dot(model))
+
+        camera_point = inverse_transform.dot(ORIGIN).A1
+        another_point = inverse_transform.dot(np.array([0, 0, 1, 1])).A1
+
+        camera_point = _to_cartesian_coordinates(camera_point)
+        another_point = _to_cartesian_coordinates(another_point)
+        ray = another_point - camera_point
         return [np.dot(n, ray) < 0 for n in self._normals]
 
-    def _convert_edges(self, lst):
-        return [self._point_store.get_points(self._edges[i]) for i in lst]
+    # edges in input defined by it's numbers
+    def _project_edges(self, transformation, edges):
+        projected_points = self._point_store.get_transformed(transformation)
+        return [projected_points.get_points(self._edges[i]) for i in edges]
 
-    def get_interesting_edges(self):
-        return self._convert_edges(self._interesting_edges)
+    def get_interesting_edges(self, model, view, projection, screen_size):
+        """
+        expected, that model and view have type base.frame.Position,
+            projection is np.matrix 4x4,
+            screen_size is np.array and it's contain width and height of image
 
-    def get_visible_edges(self, camera_position):
+        return list of numpy.ndarray (shape (2, 4))
+        edges are defined by two homogeneous point on picture
+           z coordinates isn't really important
+
+        edges will be returned, if the angle between adjacent faces
+            less than ACUTE_ANGLE_BOUND
         """
-        return array of visible edges
+        matrix = _full_transformation(model, view, projection, screen_size)
+        return self._project_edges(matrix, self._interesting_edges)
+
+    # return list af numpy.ndarray, every of which define one edge
+    def get_visible_edges(self, model, view, projection, screen_size):
         """
-        is_visible = self._check_visible(camera_position)
+        expected, that model and view have type base.frame.Position,
+            projection is np.matrix 4x4,
+            screen_size is np.array and it's contain width and height of image
+
+        return list of numpy.ndarray (shape (2, 4))
+        edges are defined by two homogeneous point on picture
+           z coordinates isn't really important
+        """
+        is_visible = self._check_visible(model, view)
 
         def check(edge_number):
             lst = self._neighbors[edge_number]
@@ -89,11 +129,24 @@ class Object3D:
             face_a, face_b = lst
             return is_visible[face_a] and is_visible[face_b]
 
-        res = [edge for i, edge in enumerate(self._edges) if check(i)]
-        return self._convert_edges(res)
+        res = [i for i in range(len(self._edges)) if check(i)]
 
-    def get_border(self, camera_position):
-        is_visible = self._check_visible(camera_position)
+        matrix = _full_transformation(model, view, projection, screen_size)
+        return self._project_edges(matrix, res)
+
+    def get_border(self, model, view, projection, screen_size):
+        """
+        expected, that model and view have type base.frame.Position,
+            projection is np.matrix 4x4,
+            screen_size is np.array and it's contain width and height of image
+
+        return list of numpy.ndarray (shape (2, 4))
+        edges are defined by two homogeneous point on picture
+           z coordinates isn't really important
+
+        edges will be returned, if its probably lying on shape of object in picture
+        """
+        is_visible = self._check_visible(model, view)
 
         def check(edge_number):
             lst = self._neighbors[edge_number]
@@ -102,8 +155,10 @@ class Object3D:
             face_a, face_b = lst
             return is_visible[face_a] ^ is_visible[face_b]
 
-        res = [edge for i, edge in enumerate(self._edges) if check(i)]
-        return self._convert_edges(res)
+        res = [i for i in range(len(self._edges)) if check(i)]
+
+        matrix = _full_transformation(model, view, projection, screen_size)
+        return self._project_edges(matrix, res)
 
     def _intersect(self, ray):
         begin = ray.begin
@@ -123,6 +178,15 @@ class Object3D:
 
     # pylint: disable=too-many-arguments
     def get_original(self, model, view, projection, screen_size, point2d):
+        """
+        expected, that model and view have type base.frame.Position,
+            projection is np.matrix 4x4,
+            screen_size is np.array and it's contain width and height of image
+            point2d is np.array and it's contain coordinates on image
+
+        return point in world coordinates, which is lying on object,
+        it's image is point2d and it's the closest to camera among such
+        """
         point2d = 2 * point2d / screen_size - 1
         point = np.array([point2d[0], point2d[1], 1, 1])
 
@@ -153,6 +217,7 @@ class Object3D:
         # original point in world's coordinates
         world_point = _to_homogeneous_coordinates(point3d)
         world_point = model.dot(world_point).A1
+
         return world_point
 
 
@@ -166,6 +231,12 @@ class PointStore:
     def transform(self, transformation):
         # matrix.A is an ndarray with equal elements
         self._array = self._array.dot(transformation.transpose()).A
+
+    def get_transformed(self, transformation):
+        res = PointStore([])
+        res.size = self.size
+        res._array = self._array.dot(transformation.transpose()).A
+        return res
 
     def get_points(self, i):
         """
