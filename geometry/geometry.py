@@ -114,7 +114,9 @@ class Object3D:
             polygon = ConvexPolygon(points)
             point = polygon.intersect(ray)
             if point is None:
+                #print("fail", end="")
                 continue
+            print("\nsuccess", end="")
             if res is None:
                 res = point
             if lin.norm(res - begin) > lin.norm(point - begin):
@@ -123,6 +125,7 @@ class Object3D:
 
     # pylint: disable=too-many-arguments
     def get_original(self, model, view, projection, screen_size, point2d):
+        print(point2d)
         point2d = 2 * point2d / screen_size - 1
         point = np.array([point2d[0], point2d[1], 1, 1])
 
@@ -150,6 +153,8 @@ class Object3D:
         # original point in object's coordinates
         point3d = self._intersect(ray)
 
+        if point3d is None:
+            return None
         # original point in world's coordinates
         world_point = _to_homogeneous_coordinates(point3d)
         world_point = model.dot(world_point).A1

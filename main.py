@@ -6,6 +6,7 @@ import os
 from gui.preview import KeyFramePreview
 from PySide import QtGui
 from geometry import load_object
+from features import processImage
 
 
 def read_args(args_list):
@@ -18,6 +19,7 @@ def initialiseGuiAndProcess(data, obj):
 
     processButton = QtGui.QPushButton("Ilya's processing")
     window.addTab(processButton, "Process")
+    window.setMinimumSize(1400, 800)
     window.setMovable(True)
 
     for label, keyframe in sorted(data.items()):
@@ -25,7 +27,7 @@ def initialiseGuiAndProcess(data, obj):
 
     def callILYA(args):
         imageAddress = QtGui.QFileDialog.getOpenFileName(*args)
-        newKeyFrame = ILYA(data, imageAddress, obj)
+        newKeyFrame = processImage(data, imageAddress, obj)
         window.addTab(KeyFramePreview(newKeyFrame, obj, window), "ILYA")
 
     args = [window,
@@ -40,7 +42,7 @@ def initialiseGuiAndProcess(data, obj):
 
 
 def demo(number_of_inputs):
-    object_address = "samples/teapot.obj"
+    object_address = "samples/cube.obj"
     obj = load_object(object_address)
     data = {}
     counters = collections.defaultdict(int)

@@ -69,6 +69,7 @@ class Ray:
         return self.begin + self.vector * distance
 
 
+##############################################################################
 def is_collinear(vector_a, vector_b):
     len_a = lin.norm(vector_a)
     len_b = lin.norm(vector_b)

@@ -22,7 +22,7 @@ def detect(img, nfeatures=500):
         cv2.circle(vis, (int(pnt.pt[0]), int(pnt.pt[1])), 5, clr, 1)
     print(vis.shape)
     global img_num
-    cv2.imshow("jack", vis)
+    #cv2.imshow("jack", vis)
     img_num = img_num + 1
 
     respoints = []
@@ -42,6 +42,16 @@ def processKeyFrame(img, ms, obj):
     res = []
     img_size = (len(img), len(img[0]))
     print("Keyframe points number: ", len(keypoints))
+    keypointss = [(1036, 450),
+                  (813, 679),
+                  (1087, 727),
+                  (994, 843),
+                  (832, 406),  # last inlier
+                  (100, 100),
+                  (1750, 990),
+                  (1066, 397)]
+
+    '''
     for keyp in keypoints:
         p3d = obj.get_original(ms[0], ms[1], ms[2], np.array([img_size[1],
                                                               img_size[0]]),
@@ -49,7 +59,20 @@ def processKeyFrame(img, ms, obj):
                                          img_size[0] - keyp[0][1]]))
         if p3d is None:
             continue
-        res.append((keyp[1], p3d))
+        res.append((keypoints[0][1], p3d))
+    '''
+
+    for keyp in keypointss:
+        p3d = obj.get_original(ms[0], ms[1], ms[2], np.array([img_size[1],
+                                                              img_size[0]]),
+                               np.array([keyp[0],
+                                         img_size[0] - keyp[1]]))
+        if p3d is None:
+            # continue
+            print(False)
+            continue
+        print(True)
+        res.append((keypoints[0][1], p3d))
 
     return res
 
@@ -63,13 +86,16 @@ def GLtoCV2d(point, img_size):
 
 
 def processImage(keyframes, imgAddr, obj):
+    imgAddr = imgAddr[0]
+    print(imgAddr)
     keyframe = next(iter(keyframes.values()))
     img = cv2.imread(imgAddr)
-
+    
     print("Grinding.")
     keyframepoints = processKeyFrame(keyframe.image, (keyframe.object_position,
                                      keyframe.camera_position,
                                      keyframe.internal_camera_parameters), obj)
+    '''
     keypoints = detect(img)
 
     desc1 = [pnt[0] for pnt in keyframepoints]
@@ -106,7 +132,8 @@ def processImage(keyframes, imgAddr, obj):
                                      np.array(img_points), ms, None)
 
     object_position = frame.Position(tvec, rvec)
+    '''
 
     return frame.KeyFrame(img, keyframe.camera_position,
                           keyframe.internal_camera_parameters,
-                          object_position)
+                          keyframe.object_position)
