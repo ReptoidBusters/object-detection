@@ -8,10 +8,10 @@ def raiseNotImplemented():
     raise NotImplemented
 
 try:
-    from matching.chamfer import chamferMatching
-    from matching.blob import blobMatching
+    from matching.chamfer import chamfer_matching
+    from matching.blob import blob_matching
 except:
-    chamferMatching = blobMatching = raiseNotImplemented
+    chamfer_matching = blob_matching = raiseNotImplemented
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -47,9 +47,9 @@ class MainWindow(QtGui.QMainWindow):
         self.menuBar = QtGui.QMenuBar(self)
 
         self.menuBar.addAction("Blob matching",
-                               lambda: callMatching(blobMatching, args))
+                               lambda: callMatching(blob_matching, args))
         self.menuBar.addAction("Chamfer matching",
-                               lambda: callMatching(chamferMatching, args))
+                               lambda: callMatching(chamfer_matching, args))
 
     def resizeEvent(self, event):
         w, h = event.size().width(), event.size().height()

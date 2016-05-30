@@ -6,7 +6,7 @@ import base.frame as frame
 from base.loading import load_object
 
 
-def InvalidAddressError(BaseException):
+class InvalidAddressError(BaseException):
     def __init__(self, string):
         self.string = string
 
