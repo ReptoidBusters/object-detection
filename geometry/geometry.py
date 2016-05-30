@@ -81,7 +81,7 @@ class Object3D:
         inverse_transform = lin.inv(view.dot(model))
 
         camera_point = inverse_transform.dot(ORIGIN).A1
-        another_point = inverse_transform.dot(np.array([0, 0, 1, 1])).A1
+        another_point = inverse_transform.dot(np.array([0, 0, -1, 1])).A1
 
         camera_point = _to_cartesian_coordinates(camera_point)
         another_point = _to_cartesian_coordinates(another_point)
