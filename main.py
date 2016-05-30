@@ -1,28 +1,27 @@
 import os
 import sys
-from gui.main_window import MainWindow
 from PySide import QtGui
-from base.input_interface import loadWorkDir
+from gui.main_window import MainWindow
+from base.input_interface import load_work_dir
 
 
-def initialiseGui(obj, data):
+def initialise_gui(obj, data):
     app = QtGui.QApplication(sys.argv)
     window = MainWindow(data, obj)
     window.show()
     app.exec_()
 
 
-def launch(workingDirectoryAddress):
-    initialiseGui(*loadWorkDir(workingDirectoryAddress))
+def launch(working_directory_address):
+    initialise_gui(*load_work_dir(working_directory_address))
 
 
 def demo():
-    curPath = os.path.realpath(__file__)
-    launch(os.path.join(os.path.dirname(curPath), "sample"))
+    cur_path = os.path.realpath(__file__)
+    launch(os.path.join(os.path.dirname(cur_path), "sample"))
 
 
-arg = sys.argv[1]
-if arg == '--demo':
-    demo()
+if sys.argv[1] != '--demo':
+    launch(sys.argv[1])
 else:
-    launch(arg)
+    demo()

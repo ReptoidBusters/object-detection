@@ -6,16 +6,23 @@ import base.frame as frame
 from base.loading import load_object
 
 
-class InvalidAddressError(BaseException):
+SUPPORTED_IMAGE_FORMATS = ['bmp', 'dib', 'jpeg', 'jpg',
+                           'jpe', 'jp2', 'png', 'pbm',
+                           'pgm', 'ppm', 'sr', 'ras',
+                           'tiff', 'tif']
+
+
+class InvalidAddressError(Exception):
     def __init__(self, string):
+        super().__init__()
         self.string = string
 
     def __repr__(self):
-        formatStr = "{}\nAddress is invalid or reading was not permitted"
-        return formatStr.format(self.string)
+        format_string = "{}\nAddress is invalid or reading was not permitted"
+        return format_string.format(self.string)
 
 
-def loadKeyframe(address):
+def load_keyframe(address):
     r"""Read keyframe from a folder. The directory tree should be like:
     path/folder_name
         parameters                                          # parameter file
@@ -30,11 +37,7 @@ def loadKeyframe(address):
         raise InvalidAddressError(params)
     image = os.path.join(address, "image.")
 
-    formats = ['bmp', 'dib', 'jpeg', 'jpg',
-               'jpe', 'jp2', 'png', 'pbm',
-               'pgm', 'ppm', 'sr', 'ras',
-               'tiff', 'tif']
-    for fmt in formats:
+    for fmt in SUPPORTED_IMAGE_FORMATS:
         if os.path.isfile(image + fmt):
             image += fmt
             break
@@ -64,7 +67,7 @@ def loadKeyframe(address):
                                   object_position)}
 
 
-def loadWorkDir(address):
+def load_work_dir(address):
     r"""Read all keyframes and object file from the given top folder. The
     directory tree should be like:
     path/top_folder
@@ -73,21 +76,21 @@ def loadWorkDir(address):
             folder1
             folder2
             ...
-    Then folder1, folder2... would be read using loadKeyframe and returned as
+    Then folder1, folder2... would be read using load_keyframe and returned as
     a dictionary {"folder1": KeyFrame(), ...}"""
 
     if not os.path.isdir(address):
         raise InvalidAddressError(address)
 
-    obj = os.path.join(address, "mesh.obj")
-    if not os.path.isfile(obj):
-        raise InvalidAddressError(obj)
-    obj = load_object(obj)
+    object_address = os.path.join(address, "mesh.obj")
+    if not os.path.isfile(object_address):
+        raise InvalidAddressError(object_address)
+    obj = load_object(object_address)
 
     keyframes = os.path.join(address, "keyframes")
     if not os.path.isdir(keyframes):
-            raise InvalidAddressError(keyframes)
+        raise InvalidAddressError(keyframes)
     data = {}
     for folder in list(os.walk(keyframes))[0][1]:
-        data.update(loadKeyframe(os.path.join(keyframes, folder)))
+        data.update(load_keyframe(os.path.join(keyframes, folder)))
     return (obj, data)

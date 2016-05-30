@@ -1,17 +1,13 @@
+try:
+    from matching.chamfer import chamfer_matching
+    from matching.blob import blob_matching
+except ImportError:
+    chamfer_matching = blob_matching = lambda: None
+
 import sys
 import os
 from PySide import QtGui
 from gui.preview import KeyFramePreview
-
-
-def raiseNotImplemented():
-    raise NotImplemented
-
-try:
-    from matching.chamfer import chamfer_matching
-    from matching.blob import blob_matching
-except:
-    chamfer_matching = blob_matching = raiseNotImplemented
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -24,19 +20,19 @@ class MainWindow(QtGui.QMainWindow):
         self.tabs.setMovable(True)
         self.setMinimumSize(960, 540)
 
-        def callMatching(function, args):
-            imageAddress = QtGui.QFileDialog.getOpenFileName(*args)
-            if not imageAddress:
+        def call_matching(function, args):
+            image_address = QtGui.QFileDialog.getOpenFileName(*args)
+            if not image_address:
                 print("Input cancelled", file=sys.stderr)
                 return
-            newKeyFrame = function(data, imageAddress, obj)
+            new_key_frame = function(data, image_address, obj)
 
-            nameArgs = [args[0],
-                        "New keyframe",
-                        "How would like to call the new keyframe?"]
+            name_args = [args[0],
+                         "New keyframe",
+                         "How would like to call the new keyframe?"]
 
-            name = QtGui.QInputDialog.getText(*nameArgs)
-            self.tabs.addTab(KeyFramePreview(newKeyFrame, obj, self.tabs),
+            name = QtGui.QInputDialog.getText(*name_args)
+            self.tabs.addTab(KeyFramePreview(new_key_frame, obj, self.tabs),
                              name)
 
         args = [self.tabs,
@@ -44,15 +40,16 @@ class MainWindow(QtGui.QMainWindow):
                 os.getcwd(),
                 "Image Files (*.png *.jpg *.bmp)"]
 
-        self.menuBar = QtGui.QMenuBar(self)
+        self.menu_bar = QtGui.QMenuBar(self)
 
-        self.menuBar.addAction("Blob matching",
-                               lambda: callMatching(blob_matching, args))
-        self.menuBar.addAction("Chamfer matching",
-                               lambda: callMatching(chamfer_matching, args))
+        self.menu_bar.addAction("Blob matching",
+                                lambda: call_matching(blob_matching, args))
+        self.menu_bar.addAction("Chamfer matching",
+                                lambda: call_matching(chamfer_matching, args))
 
-    def resizeEvent(self, event):
-        w, h = event.size().width(), event.size().height()
-        H = 20
-        self.menuBar.setGeometry(0, 0, w, H)
-        self.tabs.setGeometry(0, H + 1, w, h - H - 1)
+    def resizeEvent(self, event):  # noqa
+        width, height = event.size().width(), event.size().height()
+        menu_bar_height = 20
+        self.menu_bar.setGeometry(0, 0, width, menu_bar_height)
+        self.tabs.setGeometry(0, menu_bar_height + 1, width,
+                              height - menu_bar_height - 1)
