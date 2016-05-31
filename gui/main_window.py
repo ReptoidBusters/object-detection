@@ -1,8 +1,11 @@
 try:
     from matching.chamfer import chamfer_matching
+except ImportError:
+    chamfer_matching = lambda: None
+try:
     from matching.blob import blob_matching
 except ImportError:
-    chamfer_matching = blob_matching = lambda: None
+    blob_matching = lambda: None
 
 import sys
 import os
@@ -31,7 +34,7 @@ class MainWindow(QtGui.QMainWindow):
                          "New keyframe",
                          "How would like to call the new keyframe?"]
 
-            name = QtGui.QInputDialog.getText(*name_args)
+            name = QtGui.QInputDialog.getText(*name_args)[0]
             self.tabs.addTab(KeyFramePreview(new_key_frame, obj, self.tabs),
                              name)
 
