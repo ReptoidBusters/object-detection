@@ -1,11 +1,11 @@
 import math
 import numpy.linalg as lin
 import numpy as np
-from geometry.geometry3d import ConvexPolygon
-from geometry.geometry3d import Ray
-from geometry.geometry3d import transformation_matrix
-from geometry.geometry3d import rotation_matrix
-from geometry.geometry3d import get_angle
+from base.geometry3d import ConvexPolygon
+from base.geometry3d import Ray
+from base.geometry3d import transformation_matrix
+from base.geometry3d import rotation_matrix
+from base.geometry3d import get_angle
 
 __author__ = 'Artyom_Lobanov'
 

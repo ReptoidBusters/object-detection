@@ -1,5 +1,5 @@
 import numpy as np
-from geometry.geometry import Object3D
+from base.geometry import Object3D
 
 __author__ = 'Artyom_Lobanov'
 
