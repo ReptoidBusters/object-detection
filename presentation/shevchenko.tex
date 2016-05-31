@@ -1,11 +1,11 @@
-\begin{frame}\frametitle{Цель проекта   }
+\begin{frame}\frametitle{Цель}
     \begin{itemize}
         \item Цель: определить положение объекта на изображении
     \end{itemize}
 \end{frame}
 \begin{frame}\frametitle{Задачи}
     \begin{itemize}
-        \item Определить ключевые точки на ключевом кадре и изображении
+        \item Определить ключевые точки на ключевом кадре и изображении.
         \item Репроецировать точки ключевого кадра на объект.
         \item Сопоставить ключевые точки. Получить соотвествие 
             точек на изображении и точек на объекте.
@@ -21,6 +21,12 @@
             (scale-invariant feature transform)
     \end{itemize}
 \end{frame}
+\begin{frame}\frametitle{Ключевые точки: пример}
+    \begin{center}
+        \includegraphics[height=6cm]{shevchenko_imgs/1.png}
+    \end{center}
+\end{frame}
+
 \begin{frame}\frametitle{Сопоставление ключевых точек}
     \begin{itemize}
         \item Вычисление дескриптора, то есть объекта, который описывает
@@ -32,10 +38,15 @@
         \item Наивный метод.
     \end{itemize}
 \end{frame}
+\begin{frame}\frametitle{Сопоставление ключевых точки: пример}
+    \begin{center}
+        \includegraphics[height=6cm]{shevchenko_imgs/2.png}
+    \end{center}
+\end{frame}
 \begin{frame}\frametitle{PnP}
     \begin{itemize}
         \item Задача PnP состоит в определении матрицы трансформации по соотвествию двухмерных и трёхмерных точек
-        \item Проблема в том, что из-за не точности соотевствия ключевых точек есть точки-выбросы. 
+        \item Проблема в том, что из-за неточности соответствия ключевых точек есть точки-выбросы. 
             Для наборов с такими точками методы точного решения PnP дают очень плохие результаты
         \item Решение проблемы - RANSAC
     \end{itemize}
@@ -55,17 +66,20 @@
             количество невыбросов.
     \end{itemize}
 \end{frame}
-\begin{frame}\frametitle{Недостатки RANSAC}
-    \begin{itemize}
-        \item Погрешность
-        \item Как следствие погрешности при недостаточном количестве набором RANSAC может 
-            не найти ни одного набора, в котором есть невыбросы и не решить задачу.
-        \item Но такое случается не часто :)
-    \end{itemize}
+\begin{frame}\frametitle{Финальный результат: ключевой кадр}
+    \begin{center}
+        \includegraphics[height=6cm]{shevchenko_imgs/3.png}
+    \end{center}
 \end{frame}
+\begin{frame}\frametitle{Финальный результат: изображение}
+    \begin{center}
+        \includegraphics[height=6cm]{shevchenko_imgs/4.png}
+    \end{center}
+\end{frame}
+
 \begin{frame}\frametitle{Результаты}
     \begin{itemize}
-        \item Изучены различные типы ключевых точек и методы их выделения.
+        \item Изучил различные типы ключевых точек и методы их выделения.
         \item Изучил метод RANSAC.
         \item Научился пользоваться библиотекой OpenCV в Python.
         \item Попробовал себе в командной разработке с использованием git.
