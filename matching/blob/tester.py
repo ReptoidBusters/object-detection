@@ -31,21 +31,16 @@ if __name__ == '__main__':
 
     img = cv2.imread(sys.argv[2])
 
-    print(img)
-
     resString = subprocess.check_output("xrandr | grep '*'", shell=True)
     resString = resString.decode("utf-8")
     tmpNums = [i for i in map(int, re.findall(r'\d+', resString))]
     screenWidth = tmpNums[0]
     screenHeight = tmpNums[1]
 
-    print(screenWidth, screenHeight)
-
     if sys.argv[1] == 'ALL':
         cnt = 0
         height = min(len(img) + 100, screenHeight // 3)
         width = min(len(img[0]) + 100, screenWidth // 3)
-        print(width, height)
         for key, detector in detectorsDict.items():
             x = width * (cnt % 3)
             y = height * (cnt//3)
@@ -60,9 +55,8 @@ if __name__ == '__main__':
         img = detectorsDict[sys.argv[1]](img)
         cv2.imshow(sys.argv[1], img)
 
-    # cv2.createButton(None, kek)
 
     while True:
-        kek = cv2.waitKey()
-        if 0xFF & kek == 27:
+        key = cv2.waitKey()
+        if 0xFF & key == 27:
             break

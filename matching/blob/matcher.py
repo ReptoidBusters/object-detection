@@ -59,7 +59,6 @@ def build_matching(desc1, desc2, multimatches):
                                     m[1]))
     for i in range(n):
         distances[i] = sorted(distances[i], reverse=USE_MARRIAGE)
-    #print(distances[0])
 
     matching = [-1 for i in range(len(desc2))]
 
@@ -78,7 +77,6 @@ def build_matching(desc1, desc2, multimatches):
                             descriptor_dist(desc1[cur_guy], desc2[cmatch[1]])):
                         matching[cmatch[1]] = cur_guy
                         break
-                        #cur_guy, matching[cmatch[1]] = matching[cmatch[1]], cur_guy
         else:
             matching[distances[i][0][1]] = i
     res = []

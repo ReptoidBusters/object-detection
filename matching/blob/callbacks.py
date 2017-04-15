@@ -132,7 +132,6 @@ def processKeyFrame(img, ms, obj):
 
 def blob_matching(keyframes, imgAddr, obj):
     imgAddr = imgAddr[0]
-    print(imgAddr)
     keyframe = next(iter(keyframes.values()))
     initial_camera_parameters = (keyframe.camera_position,
                                  keyframe.internal_camera_parameters,
