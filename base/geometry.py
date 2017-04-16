@@ -1,11 +1,11 @@
 import math
 import numpy.linalg as lin
 import numpy as np
-from geometry.geometry3d import ConvexPolygon
-from geometry.geometry3d import Ray
-from geometry.geometry3d import transformation_matrix
-from geometry.geometry3d import rotation_matrix
-from geometry.geometry3d import get_angle
+from base.geometry3d import ConvexPolygon
+from base.geometry3d import Ray
+from base.geometry3d import transformation_matrix
+from base.geometry3d import rotation_matrix
+from base.geometry3d import get_angle
 
 __author__ = 'Artyom_Lobanov'
 
@@ -114,7 +114,9 @@ class Object3D:
             polygon = ConvexPolygon(points)
             point = polygon.intersect(ray)
             if point is None:
+                #print("fail", end="")
                 continue
+            #print("\nsuccess", end="")
             if res is None:
                 res = point
             if lin.norm(res - begin) > lin.norm(point - begin):
@@ -123,6 +125,7 @@ class Object3D:
 
     # pylint: disable=too-many-arguments
     def get_original(self, model, view, projection, screen_size, point2d):
+        #print(point2d)
         point2d = 2 * point2d / screen_size - 1
         point = np.array([point2d[0], point2d[1], 1, 1])
 
@@ -150,10 +153,18 @@ class Object3D:
         # original point in object's coordinates
         point3d = self._intersect(ray)
 
+        if point3d is None:
+            return None
         # original point in world's coordinates
         world_point = _to_homogeneous_coordinates(point3d)
         world_point = model.dot(world_point).A1
         return world_point
+
+    def get_points(self):
+        return self._point_store.get_all_points()
+
+    def get_faces(self):
+        return self._faces
 
 
 class PointStore:
@@ -173,3 +184,6 @@ class PointStore:
         if i is list or tuple, return list of points
         """
         return self._array[i, :]
+
+    def get_all_points(self):
+        return self._array

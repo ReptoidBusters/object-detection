@@ -1,50 +1,27 @@
-import collections
-import argparse
-import base
+import os
+import sys
+from PySide import QtGui
+from gui.main_window import MainWindow
+from base.input_interface import load_work_dir
 
 
-def read_args(args_list):
-    return (input("Enter {}: ".format(arg)) for arg in args_list)
+def initialise_gui(obj, data):
+    app = QtGui.QApplication(sys.argv)
+    window = MainWindow(data, obj)
+    window.show()
+    app.exec_()
 
 
-def process(data):
-    del data
+def launch(working_directory_address):
+    initialise_gui(*load_work_dir(working_directory_address))
 
 
-def cli(number_of_inputs):
-    data = {}
-    counters = collections.defaultdict(int)
-    for _ in range(number_of_inputs):
-        method = base.input_interface.METHODS[input("Input method to use: ")]
-        for key, frame in method(*read_args(method.input_list)).load().items():
-            counters[key] += 1
-            if counters[key] > 1:
-                key += str(counters[key])
-            data[key] = frame
-    print("Read finished")
-    process(data)
-    method = base.output_interface.METHODS[input("Output method to use: ")]
-    method_args = read_args(method.input_list)
-    if method == base.output_interface.BulkFolderWriter:
-        method(data, *method_args).write()
-    else:
-        saved = 0
-        for key, frame in data.items():
-            method(frame, *read_args(method.input_list)).write()
-            saved += 1
-            if saved < len(data):
-                method = base.output_interface.METHODS[input("""Output method to
-                                                             use: """)]
+def demo():
+    cur_path = os.path.realpath(__file__)
+    launch(os.path.join(os.path.dirname(cur_path), "ilya_sample"))
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Process some keyframes.')
-    parser.add_argument('keyframes', metavar='N', type=int, nargs='?',
-                        help='number of inputs', default=1)
-    parser.add_argument('--cli', dest='launch', action='store_const',
-                        const=cli, default=cli,
-                        help='''Launch the program in CLI mode (default will be
-                        GUI once it is implemented)''')
-
-    parser_args = parser.parse_args()
-    parser_args.launch(parser_args.keyframes)
+if sys.argv[1] != '--demo':
+    launch(sys.argv[1])
+else:
+    demo()
